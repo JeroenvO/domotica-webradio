@@ -1,0 +1,247 @@
+/*Custom stylesheet used with Raspberry Pi Domotica
+Jeroen van Oorschot 2013*/
+
+html{
+	height: auto !important; /*Don't scroll page when not necesary*/
+	width: 99%; !important;
+	-ms-touch-action: manipulation;
+	-webkit-user-select: none;  
+  	-moz-user-select: none;    
+  	-ms-user-select: none;      
+  	user-select: none;
+	-ms-touch-action: pan-x;
+-ms-content-zooming: none;
+	/*-ms-overflow-style: -ms-autohiding-scrollbar*/
+}
+body{
+	width:99%;
+	margin: 0px;
+	top: 0px !important;/*Hide translate bar space on top of screen*/
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	background-color:#eee;
+	min-width:300px;
+	-ms-scroll-translation: vertical-to-horizontal;
+	background-color: #fff;
+
+}
+
+/*divisions*/
+div#container{ /*De pagina op het menu na*/
+	min-width: 200px;
+	height: auto;
+	margin: 10px;
+	padding: 10px;
+}
+/*settings layout specific divs*/
+div#header{
+    height: auto;/*60px;*/
+	position:fixed;
+	width:99%;
+	top:15px;
+	left:5px;
+	min-width:300px;
+}
+div#footer{
+	position:fixed;
+	bottom:5px;
+	left:0px;
+	width:100%;	
+}
+#pagetitle{
+	float:left;
+	margin-left:20px;
+}
+
+
+#page-buttons{ /*container around pag-button 's */
+	min-width:280px;
+	position:fixed;
+	right:0px;
+	top:5px;
+	padding: 1px;
+	margin:0px;
+	z-index: 10; /*fix for weird behaviour when cliced*/
+	
+}
+#cat-buttons{
+	padding:1px;
+	margin-top:50px;
+	float:left;
+	overflow:visible;
+}
+div#contentpage{
+	margin-top:70px;
+	padding: 5px;
+	min-height:70px;
+	width:100%;
+	
+}
+
+div.cat{
+	min-width:100px;
+	min-height:50px;
+	float:left;
+	padding: 10px;
+	padding-left:20px;
+	border:1px solid black;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	overflow-style:auto;
+	margin:5px;
+}
+div.subcat{
+	margin: 10px;	
+}
+div.setting{
+	border: 1px black #999999;
+	padding: 5px 10px;
+	margin:5px 0px;
+	width:auto;
+}
+div#footer{/*footer*/
+	clear: both;
+	margin: 5px 5px 0px 5px;
+	padding: 5px 5px 0px 5px;
+}
+#color-swatches{
+	margin:5px;
+	float:left;
+	padding-left:20px;
+}
+.colorSwatch{
+	width: 10px;
+	height: 10px;
+	float:left;	
+	cursor:crosshair;
+}
+label.switch{
+	margin-left:0px;	
+	margin-top:5px;
+}
+.switch-text{ /*fix for multiple colors on text switch*/
+	background-color:white!important;
+	margin-left:-5px;
+	padding-left:20px;
+	font-weight:bold;
+}
+.div-slider{ /*division containing input-slider*/
+	-ms-touch-action: none; /*disable scrolling*/
+}
+.back-button{
+	float:left;
+	margin-top: 9px;
+	margin-right:20px;
+}
+/* index.php layout styling*/
+.linksPanel{ /*links on homepage on left side*/
+	list-style-type:none!important;
+}
+/*radio buttons extra widht*/
+label.radio > span.helper{
+	display:inline-block;
+	min-width:600px;
+}
+
+.smallButton{
+	width: 40px !important;
+	min-width: 0px !important;
+}
+@media all and (max-width:800px){
+div#header{
+    height: auto;/*60px;*/
+	position:fixed;
+	width:99%;
+	top:15px;
+	left:5px;
+	}
+#cat-buttons{
+	
+	}
+div#contentpage{
+	margin-top:100px;
+}
+h1{
+	font-size: 30pt!important;	
+	margin-top:20px!important;
+	line-height: 18px!important;
+	height: 50px!important;
+	
+}
+}
+@media all and (max-width:500px){
+.setlinktxt { /*Laat alleen icoon zien bij klein scherm*/
+		display:none;
+	}
+.footer{
+		display:none;
+	}
+.paglinktxt{
+	display:none;
+}
+#cat-buttons{
+/*	*/
+	display:none !important;
+}
+.pag-button{
+	width: 40px !important;
+    min-width: 0px !important;
+}
+#page-buttons{
+	right: 5px !important;
+	width: auto !important;
+    min-width: 0px !important;
+	/*border: 1px solid;*/
+	top:75px;
+}
+.colorSwatch{
+	display:none;	
+}
+}
+
+
+
+/*general stuff*/
+.left{ /*too let something float left*/
+	display: block;
+	float:left;	
+}
+
+div#block3left{
+	float:left;
+	min-width:185px;
+	width: 20%;
+	margin:5px;
+	margin-left:1%;
+}
+
+div#block3center{
+	min-width:150px;
+	float:left;
+	width:50%;
+	margin:5px;
+}
+div#block3right{
+	min-width:200px;
+	float:left;
+	width:20%;
+	margin:5px;
+}
+div.block2left{
+	float:left;
+	width: 200px;
+	margin:5px;
+	margin-left:-12px;
+}
+div.block2center{
+	float:left;
+	margin-left:8%;
+}
+h1{
+	float:left;
+}
+hr {
+    border: 0;
+    border-bottom: 1px #ddd dotted;
+    color: #ddd;
+    background-color: #ddd;
+}
