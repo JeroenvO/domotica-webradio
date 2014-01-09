@@ -71,7 +71,10 @@ else{
 	echo '<title>Login Error</title>';
 }
 ?>
+
+
 <script type="text/javascript">
+//include all necessary plugins of Metro-UI CSS
 	var plugins = [
     'core',
     'touch-handler',
@@ -103,54 +106,36 @@ else{
     'scroll'
 ];
 
+//add the chosen plugins
 $.each(plugins, function(i, plugin){
     $("<script/>").attr('src', 'js/metro-'+plugin+'.js').appendTo($('head'));
 });
+
+
 //Javascript input-control functions
 //Jeroen van Oorschot 2013
 //Used with Raspberry Pi Domotica
 
- ////////////////////////////////INIT
-var numCat;
+////////////////////////////////INIT
+
+var numCat; //variable for the number of categories, used give the page the right width
 var usernm = "<?php echo $usernm; ?>";
-var page;
+var page;   //the current page, like 'bediening' 'logboeken'
+
+//prevent ajax cache, so always the new values are loaded from the server.
 $.ajaxSetup({
 		cache: false
-	});
+});
 	
- $(document).ready(function(){ //code uit te voeren zodra de pagina geladen is
- 	$.getJSON("loadPage.php", {page: 'bediening'})
- 	.done(function(data)
- 	{
- 		buildPage('bediening', data);
- 	})
- 	.fail(function(){
- 		alert('De waarden voor deze pagina konden niet opgehaald worden, probeer het later opnieuw');
- 	});
+//thinks to do when the page is loaded.
+ $(document).ready(function(){
  	//buildPage('bediening', <?php $_GET['page']='bediening'; require_once 'loadPage.php'; ?>); //de eerste pagina die geladen wordt als de website opent.
-	//loadPage('bediening');
+	loadPage('bediening');
 	setInterval(function(){updateValues()}, 5000) //periodically update the values, every 5 secs now
  }
  );
  
-function buildPage(page2load, data){
 
-	$('#pagetitle-title').html('<h1>'+page2load.toLowerCase()+'</h1>'); //set pagetitle
-	$('#page-buttons').html(data.pbt); //page buttons
-	$('#cat-buttons').html(data.cbt); // cat buttons
-	$('#cat-page').html(data.cnt); //  page content
-	numCat = data.nmct;
-
-	setWidth(); //set the width of the page and the categories
-	initSliders(); //set the settings for all sliders, and the init values
-	setDateTimePickers(); //set the settings for all datetimepicker objects
-	setColor(data.color); //set the initial color, read from the db
-	
-	bindActions(); //bind actions to all buttons and so.
-	updateValues(); //set values for all controls that arent set automatically in loadPage
-	console.log('page ' + page2load + ' builded');
-	page = page2load;
- };
 
 //Init Jquery UI Sliders with given startvalue
 function initSliders(){
@@ -164,30 +149,17 @@ function initSliders(){
 			});
 		});
 }
-function setDateTimePickers(){
+
+//init date time pickers
+function initDateTimePickers(){
 
 	//Connect the plug with 24-hour format:
 	//$(".input-time").sltime({});
 
 }
-//////////////////////UPDATE FUNCTIONS
-function setColor(colorRGB){ //update colors
-	$(".fgColor").css("color",colorRGB); //foreground color
-	$(".bgColor").css("background-color",colorRGB);//general class bgColor
-	$(".ui-slider-range").css("background-color",colorRGB);//slider
-}
 
-function postDB(pvalue, pwhere1, pwhere2, ptable){ //post changed settings to doUpdate.php that puts the new values in the database
-	$.post('doUpdate.php', { value: pvalue, where1: pwhere1, where2: pwhere2, table: ptable })//send post update
-			.done(function(data){ //if succesfull post
-				if(data) window.alert(data); //usually not enough rights exception. If success, nothing is returned, data=NULL
-			})
-			.fail(function(data){ //xmlhttprequest failed, server is not available
-				window.alert("De server is niet bereikbaar, probeer later opnieuw");
-			});
-}
-
-function bindActions(){ //Bind actions to events on buttons, usually call postDB()
+//init all buttons and options by applying events like 'click' on them and binding them to the appropriate function, mostly post
+function bindActions(){ //Bind actions to events on buttons, usually call postValue()
 	//navigation functions
 	$(".pag-button").click(function(){  //page buttons
            var name = $(this).attr('id');
@@ -209,13 +181,13 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 	$(".input-tf").click(function() {   //on-off buttons
 			var name = $(this).attr('id');
 			var val = $(this).prop("checked");
-			postDB(val,'name',name,'settings');
+			postValue(val,'name',name,'settings');
            // window.alert(val);
 	});									
 	$(".input-toggle").click(function() {//toggle state buttons
 			var name = $(this).attr('id')
 			var val = 'toggle';
-			postDB(val,'name',name,'settings');
+			postValue(val,'name',name,'settings');
     });									
 	$(".input-time").change(function() {//time input
 			var name = $(this).attr('id')
@@ -228,7 +200,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 						if(test[1].length==1){test[1]='0'+test[1];} //add zeros to minutes
 						val = test[0]+':'+test[1]; //save with :
 						
-						postDB(val,'name',name,'settings');
+						postValue(val,'name',name,'settings');
 						updateValues();
 					}else{
 						console.log("invalid time");
@@ -248,7 +220,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 			var name =$(this).attr('id'); //id van de hele option
 			var checkedItem = 'input[name='+name+']:radio:checked'; 
 			var val = $(checkedItem).attr('id'); //id of selected element
-			postDB(val,'name',name,'settings');
+			postValue(val,'name',name,'settings');
 			//window.alert(name+' met waarde '+val);
     }); 
 	$( ".slider" ).on( "slidestop", function( event, ui ) { //Jquery UI slider
@@ -256,7 +228,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 			var name = $(this).attr('id');
 			var val = (ui.value);
 			$("#"+name+"-txt").html(val);
-			postDB(val,'name',name,'settings');
+			postValue(val,'name',name,'settings');
 			//console.log(event,ui);
 	});
 	$('.div-slider').parent().parent().on('touchstart touchmove', function(e){
@@ -276,18 +248,33 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 		val = val.substring(0,val.length-1);
 		val += '}';
 		//console.log(name, val);
-		postDB(val,'name',name,'settings');
+		postValue(val,'name',name,'settings');
 	});
 	$(".colorSwatch").click(function(){  //color buttons, update color
 		var colorRGB = $(this).css('background-color');
 		//update db
-		postDB(colorRGB,'usernm',usernm,'users');
+		postValue(colorRGB,'usernm',usernm,'users');
 		//set color
 		setColor(colorRGB);
     });
 }
 
-function updateValues(){ //load updated values from the database. For instance if they are changed on another device.
+
+//////////////////////UPDATE FUNCTIONS
+
+//post a value asynchronous via doUpdate.php to the database
+function postValue(pvalue, pwhere1, pwhere2, ptable){ //post changed settings to doUpdate.php that puts the new values in the database
+	$.post('doUpdate.php', { value: pvalue, where1: pwhere1, where2: pwhere2, table: ptable })//send post update
+	.done(function(data){ //if succesfull post
+		if(data) window.alert(data); //usually not enough rights exception. If success, nothing is returned, data=NULL, then nothing is shown.
+	})
+	.fail(function(data){ //xmlhttprequest failed, server is not available
+		window.alert("De server is niet bereikbaar, probeer later opnieuw");
+	});
+}
+
+//load updated values from the database, via loadValues.php . For instance if they are changed on another device.
+function updateValues(){ 
 	$.getJSON('loadValues.php',	 { page: page})
 	.done(function(data){
 		for(var key in data){ //get data json array
@@ -301,7 +288,6 @@ function updateValues(){ //load updated values from the database. For instance i
                     tf = (value=="true"?true:false);
                     //console.log(find+tf);
 					$(find).prop("checked", tf);
-                    
 				break;
 				case 'media': //media controls
 				break;
@@ -332,35 +318,26 @@ function updateValues(){ //load updated values from the database. For instance i
 				break;
 				default:
 				break;
-				} //end switch*/
-			}
+			}	
 		}
-	)
-	.fail(function(){
-		console.log("failed to load variables from db");
-	});
-		 //end $.get*/
-	console.log("Values are updated");
-}//end function
+		console.log("Values are updated");
+	})
+	.fail(function(){ //server unreachable
+		console.log("Failed to load variables from server");
+	});			
+}
 
-function loadPage(page2load){ //load a page from loadPage.php
-	$('#cat-page').html('<img src="./images/preloader-w8-cycle-black.gif" />'); // show page loader
-	console.log('loading: '+page2load);
-	 if(<?php echo $level ?>>=0){ //if valid user
-		 $.getJSON('loadPage.php', { page: page2load})
-		 	.done(function(data){ //get returned page
-				buildPage(page2load, data);
-			})
-			.fail(function() {
-				alert('De waarden voor deze pagina konden niet opgehaald worden, probeer het later opnieuw');
-			});
-	 }
-	 else{
-		$("#container").html('<div class="error-bar">Je bent niet ingelogd. <a href="index.php" title="niet ingelogd">Klik hier om in te loggen</a></div>'); //show error bar
-	 }
- }
- 
 
+////////////////Page functions
+
+//apply a chosen color to all colored objects
+function setColor(colorRGB){ //update colors
+	$(".fgColor").css("color",colorRGB); //foreground color
+	$(".bgColor").css("background-color",colorRGB);//general class bgColor
+	$(".ui-slider-range").css("background-color",colorRGB);//slider
+}
+
+//set the width of the page such that all categories fit horizontally
 function setWidth(){ //change the widht of items dynamically. Also done in opmaak.css
 	var w, h, rw;
 	rw = window.innerWidth;
@@ -370,8 +347,47 @@ function setWidth(){ //change the widht of items dynamically. Also done in opmaa
 	$(".cat").width(w);
 	$(".cat").height(h);
 	$("#cat-page").width(numCat*rw);
-
 }
+
+//function to build the page from a data object containing the content of the page
+function buildPage(page2load, data){
+	$('#pagetitle-title').html('<h1>'+page2load.toLowerCase()+'</h1>'); //set pagetitle
+	$('#page-buttons').html(data.pbt); //page buttons
+	$('#cat-buttons').html(data.cbt); // cat buttons
+	$('#cat-page').html(data.cnt); //  page content
+	numCat = data.nmct;
+
+	setWidth(); //set the width of the page and the categories
+	initSliders(); //set the settings for all sliders, and the init values
+	setDateTimePickers(); //set the settings for all datetimepicker objects
+	setColor(data.color); //set the initial color, read from the db
+	
+	bindActions(); //bind actions to all buttons and so.
+	updateValues(); //set values for all controls that arent set automatically in loadPage
+	console.log('page ' + page2load + ' builded');
+	page = page2load;
+}
+
+//load the data of a page asynchronous from loadPage.php.
+//The valid user check is not safe because it is js. So in loadPage the validity is checked also
+function loadPage(page2load){ //load a page from loadPage.php
+	$('#cat-page').html('<img src="./images/preloader-w8-cycle-black.gif" />'); // show page loader
+	console.log('loading: '+page2load);
+	if(<?php echo $level ?>>=0){ //if valid user
+		$.getJSON('loadPage.php', { page: page2load})
+		.done(function(data){ //get returned page
+			buildPage(page2load, data);
+		})
+		.fail(function() { //server unavailable
+			alert("De pagina kan niet worden opgehaald, probeer later opnieuw");
+		});
+	}
+	else{
+		$("#container").html('<div class="error-bar">Je bent niet ingelogd. <a href="index.php" title="niet ingelogd">Klik hier om in te loggen</a></div>'); //show error bar
+	}
+ }
+ 
+
 
 
 </script>
