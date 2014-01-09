@@ -1,7 +1,7 @@
 <?php
 //session_start();
 
-$pag_nam = $_GET['page'];
+$pag_nam = mysql_real_escape_string($_GET['page']);
 require 'checkLevel.inc';
 $cnt = ''; //content. Categories, subcats, options
 $cbt = ''; //category buttons, to scroll to a cat

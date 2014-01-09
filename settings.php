@@ -119,7 +119,15 @@ $.ajaxSetup({
 	});
 	
  $(document).ready(function(){ //code uit te voeren zodra de pagina geladen is
- 	buildPage('bediening', <?php $_GET['page']='bediening'; require_once 'loadPage.php'; ?>); //de eerste pagina die geladen wordt als de website opent.
+ 	$.getJSON("loadPage.php", {page: 'bediening'})
+ 	.done(function(data)
+ 	{
+ 		buildPage('bediening', data);
+ 	})
+ 	.fail(function(){
+ 		alert('De waarden voor deze pagina konden niet opgehaald worden, probeer het later opnieuw');
+ 	});
+ 	//buildPage('bediening', <?php $_GET['page']='bediening'; require_once 'loadPage.php'; ?>); //de eerste pagina die geladen wordt als de website opent.
 	//loadPage('bediening');
 	setInterval(function(){updateValues()}, 5000) //periodically update the values, every 5 secs now
  }
@@ -280,7 +288,8 @@ function bindActions(){ //Bind actions to events on buttons, usually call postDB
 }
 
 function updateValues(){ //load updated values from the database. For instance if they are changed on another device.
-	$.get('loadValues.php',	 { page: page}, 	function(data){
+	$.getJSON('loadValues.php',	 { page: page})
+	.done(function(data){
 		for(var key in data){ //get data json array
 			var name = "#"+key;
 			var typeVal = data[key];
@@ -325,21 +334,26 @@ function updateValues(){ //load updated values from the database. For instance i
 				break;
 				} //end switch*/
 			}
-		}, 'json');//end function
+		}
+	)
+	.fail(function(){
+		console.log("failed to load variables from db");
+	});
 		 //end $.get*/
-			console.log("Values are updated");
+	console.log("Values are updated");
 }//end function
 
 function loadPage(page2load){ //load a page from loadPage.php
 	$('#cat-page').html('<img src="./images/preloader-w8-cycle-black.gif" />'); // show page loader
 	console.log('loading: '+page2load);
 	 if(<?php echo $level ?>>=0){ //if valid user
-		 $.get('loadPage.php',
-		 { page: page2load},
-		 	function(data){ //get returned page
+		 $.getJSON('loadPage.php', { page: page2load})
+		 	.done(function(data){ //get returned page
 				buildPage(page2load, data);
-			}
-		,'json');
+			})
+			.fail(function() {
+				alert('De waarden voor deze pagina konden niet opgehaald worden, probeer het later opnieuw');
+			});
 	 }
 	 else{
 		$("#container").html('<div class="error-bar">Je bent niet ingelogd. <a href="index.php" title="niet ingelogd">Klik hier om in te loggen</a></div>'); //show error bar
