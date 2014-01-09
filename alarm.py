@@ -40,7 +40,7 @@ def startAlarm(alarmParent, oneTimeAlarm):
         #     print('error turning alarm off')
         print('one time alarm turned off')
     #find volume, increasevolume
-    qry3 = "SELECT settings.name, SUBSTRING(settings.name,4,LENGTH(settings.name)-3), settings.value FROM RPi.settings where parent='" + alarmParent + "' ORDER BY settings.name"
+    # qry3 = "SELECT settings.name, SUBSTRING(settings.name,4,LENGTH(settings.name)-3), settings.value FROM RPi.settings where parent='" + alarmParent + "' ORDER BY settings.name"
     columns = ['name', 'SUBSTRING(settings.name,4,LENGTH(settings.name)-3)', 'value']
     condition = {
         'parent' : alarmParent
@@ -59,7 +59,7 @@ def startAlarm(alarmParent, oneTimeAlarm):
         fullName = alarmSettings[0]
         value = alarmSettings[2]
         if alarmSettings[1] == 'alarmVol':  # update volume, don't use increase vol yet
-            qry4 = "UPDATE settings set value='" + value + "', changetime='" + time10() + "' WHERE name='volume'"
+            # qry4 = "UPDATE settings set value='" + value + "', changetime='" + time10() + "' WHERE name='volume'"
             values = {
                 'value' : value,
                 'changetime' : time10()
@@ -145,7 +145,7 @@ def checkAlarm():
             #print("alarm: " + ah + ';' + am)
 
             if ah == th and am == tm:  # time match
-                qry = "SELECT settings.name, settings.value FROM RPi.settings WHERE parent='"+pt+"' AND SUBSTRING(settings.name,4,LENGTH(settings.name)-3)='alarmDays'"
+                # qry = "SELECT settings.name, settings.value FROM RPi.settings WHERE parent='"+pt+"' AND SUBSTRING(settings.name,4,LENGTH(settings.name)-3)='alarmDays'"
                 condition = {
                     'parent' : pt,
                     'SUBSTRING(settings.name,4,LENGTH(settings.name)-3)' : 'alarmDays'
@@ -193,7 +193,7 @@ def checkAutoOff():
     # con = connectDB()
     # cursor = con.cursor()
     #make query
-    qry = "select settings.value from RPi.settings WHERE settings.name='soundSleepTimer'"
+    # qry = "select settings.value from RPi.settings WHERE settings.name='soundSleepTimer'"
     condition = {
         'name' : 'soundSleepTimer'
     }
@@ -242,7 +242,7 @@ def checkAutoOff():
                 # except:
                 #     print("query execute error")
                 #disable the sound sleep timer
-                qry6 = "UPDATE settings set value='uit', changetime='" + time10() + "' WHERE name='soundSleepTimer'"
+                # qry6 = "UPDATE settings set value='uit', changetime='" + time10() + "' WHERE name='soundSleepTimer'"
                 values = {
                     'value' : 'uit',
                     'changetime' : time10()
@@ -306,7 +306,7 @@ def checkReclame():
 
             elif tm == 5:  # time match
                 #turn amplifier off
-                qry5 = "UPDATE settings set value='3fm', changetime='" + time10() + "' WHERE name='radiostation'"
+                # qry5 = "UPDATE settings set value='3fm', changetime='" + time10() + "' WHERE name='radiostation'"
                 values = {
                     'value' : '3fm',
                     'changetime' : time10()
