@@ -4,14 +4,6 @@ Jeroen van Oorschot 2013*/
 html{
 	height: auto !important; /*Don't scroll page when not necesary*/
 	width: 99%; !important;
-	-ms-touch-action: manipulation;
-	-webkit-user-select: none;  
-  	-moz-user-select: none;    
-  	-ms-user-select: none;      
-  	user-select: none;
-	-ms-touch-action: pan-x;
--ms-content-zooming: none;
-	/*-ms-overflow-style: -ms-autohiding-scrollbar*/
 }
 body{
 	width:99%;
@@ -20,9 +12,7 @@ body{
 	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 	background-color:#eee;
 	min-width:300px;
-	-ms-scroll-translation: vertical-to-horizontal;
 	background-color: #fff;
-
 }
 
 /*divisions*/

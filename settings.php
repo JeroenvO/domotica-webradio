@@ -16,6 +16,21 @@
 <script type="text/javascript" src="./js/jquery.widget.min.js"></script><!--also for metro ui-->
 <!--CSS-->
 <link href="./css/opmaak.css" type="text/css" rel="stylesheet" />
+<style>
+html{
+	-ms-touch-action: manipulation;
+	-webkit-user-select: none;  
+  	-moz-user-select: none;    
+  	-ms-user-select: none;      
+  	user-select: none;
+	-ms-touch-action: pan-x;
+	-ms-content-zooming: none;
+	/*-ms-overflow-style: -ms-autohiding-scrollbar*/
+}
+body{
+	-ms-scroll-translation: vertical-to-horizontal;
+}
+</style>
 <!--slider-->
 <link href="./css/jquery-ui-1.10.3.custom.css" rel="stylesheet" />
 <script src="./js/jquery-ui-1.10.3.custom.js"></script>
