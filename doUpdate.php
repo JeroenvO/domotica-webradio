@@ -1,8 +1,8 @@
 <?php
 	session_start();
 	require './checkLevel.inc';
-	require './cons/afdwaka.con';
-	if($level > 0){		
+	if($level > 0){
+		require 'cons/afdwaka.con';
 		$where1 = mysql_real_escape_string($_POST['where1']);	//where string
 		$where2 = mysql_real_escape_string($_POST['where2']);
 		$table = mysql_real_escape_string($_POST['table']);	//table to read or put the data

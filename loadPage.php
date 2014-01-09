@@ -1,23 +1,34 @@
 <?php
-//session_start();
+session_start();
 
-$pag_nam = mysql_real_escape_string($_GET['page']);
 require 'checkLevel.inc';
-$cnt = ''; //content. Categories, subcats, options
-$cbt = ''; //category buttons, to scroll to a cat
-$pbt = ''; //page buttons, to go to the next page
-/* //slowdown
-for($i=0;$i<10000;$i++){
-	$t = $t.'hoi';
-	}
-*/
-$file = $pag_nam.".txt";
+
+//get the requested page
+$pag_nam = mysql_real_escape_string($_GET['page']);
+
 
 if($level >=0 && $pag_nam){
+	
+	/* //slowdown
+	for($i=0;$i<10000;$i++){
+		$t = $t.'hoi';
+		}
+	*/
+
+	//the file used to cache the created page	
+	$file = $pag_nam.".txt";
+
+	//connect to the database
 	require './cons/afdwaka.con'; //also needed for color
+	//the users chosen color
 	include 'color.inc';
 
 	if(isset($_GET['noCache'])||!file_exists($file)){ //update cache file
+		//make variables to store the created page
+		$cnt = ''; //content. Categories, subcats, options
+		$cbt = ''; //category buttons, to scroll to a cat
+		$pbt = ''; //page buttons, to go to the next page
+
 		$table = 'settings';
 
 		//pages
@@ -27,7 +38,7 @@ if($level >=0 && $pag_nam){
 			echo 'Fout in query page: '.$db_con->error; 
 			exit();
 		}
-		
+		//check all pages, to make buttons in right top (PageBuTton)
 		while($row_pag=$res_pag->fetch_assoc()){//pages
 			if($row_pag['level'] <= $level){
 				if($row_pag['name'] != $pag_nam){
@@ -49,6 +60,7 @@ if($level >=0 && $pag_nam){
 			echo 'Fout in query cat: '.$db_con->error; 
 					exit();
 		}
+		//all the categories in the chosen page. These are horizontally shown.
 		for($i=0;$row_cat=$res_cat->fetch_assoc();$i++){//cat
 			if($row_cat['level'] <= $level){
 				//var_dump($row_cat);
@@ -56,7 +68,7 @@ if($level >=0 && $pag_nam){
 				$Cat = ucfirst($cat);
 				$cnt.='<div class="cat" id="cat'.$i.'"><h3>'.$Cat.'</h3>';//category div and title
 				$cbt .= '<a class="button left cat-button" id="cat'.$i.'link" title="Ga naar '.$Cat.'"><i class="icon-'.$row_cat['value'].'"></i><span class="catlinktxt">'.$Cat.'</span></a>';//cat buttons
-					//subcategories
+					//subcategories, inside a category there are subcategories, these have a colored heading
 					$qry_sbc = 'select * from '.$table.' where parent=\''.$row_cat['name'].'\' order by vlgrd';
 					if(!$res_sbc = $db_con->query($qry_sbc)){
 						echo 'Fout in query subcat: '.$db_con->error;
@@ -72,10 +84,12 @@ if($level >=0 && $pag_nam){
 									echo 'Fout in query options: '.$db_con->error; 
 											exit();
 								}
+								//each option for a setting within a subcategory
 								while($row_opt=$res_opt->fetch_assoc()){//each option
 									if($row_opt['level'] <= $level){
-										//text to show for option
+										//most options start with a text/title
 										$cnt.='<div class="setting div-'.$row_opt['type'].'"><span class="body-text">'.ucfirst($row_opt['desc']).'</span><br />';
+										//make option specific HTML to show the setting.
 										switch($row_opt['type']){
 											case 'tf': //default, true/false
 												//$checked = "";//"($row_opt['value']=='true')?'checked=""':'';
@@ -221,33 +235,31 @@ if($level >=0 && $pag_nam){
 					//not allowed to view subcat	
 				}
 			}
-			$res_cat->close();
+			$res_cat->close(); //end of db operations
 		
-			//make json, 
-			
+			//make json from the created vars
 			$json_array =  json_encode(array( 'pbt' => $pbt, 'cbt' => $cbt, 'cnt' => $cnt, 'nmct' => $i, 'color' => $colorRGB ));
-			
+			//store json in file for later use, cache
 			$handle = fopen($file, 'w') or die("can't open file");
 			fwrite($handle, $json_array);
-			
 			fclose($handle);
-
+			//echo the json array so javascript can use it.
 			echo $json_array;
-			//str_replace('\\', '\\\\', 
+
 	}else{ //give array from cache
 		if(file_exists($file)){
 			$array = json_decode(file_get_contents($file), true);
-			//print_r($array);
+			//decode the array to update the color setting
 			$array['color'] = $colorRGB;
+			//echo the json array so javascript can use it.
 			echo json_encode($array);
-			
 		}else{
-			echo 'cache file not available';
+			echo json_encode(array( 'pbt' => '', 'cbt' => '', 'cnt' => 'cache file not available', 'nmct' => '1', 'color' => '' ));;
 		}
 	}
 }
 else{
-	echo json_encode(array( 'pbt' => '', 'cbt' => '', 'cnt' => 'Ho ho! Dit mag niet! <a href=\".\/index.php\" title=\"terug\">terug<\/a>', 'nmct' => '0', 'color' => '' ));
+	echo json_encode(array( 'pbt' => '', 'cbt' => '', 'cnt' => 'Ho ho! Dit mag niet!', 'nmct' => '1', 'color' => '' ));
 }
 
 
