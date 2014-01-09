@@ -1,4 +1,9 @@
-<?php session_start()?>
+<?php
+	if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
+?>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -19,7 +24,7 @@
 		<link href="./css/modern-responsive.css" rel="stylesheet" />
 		<link href="./css/site.css" rel="stylesheet" type="text/css" />
 
-		<script type="text/javascript" src="./js/modern/input-control.js"></script>
+		<!--<script type="text/javascript" src="./js/modern/input-control.js"></script>-->
 		<title>Raspberry || Home</title>
 
 
@@ -107,7 +112,6 @@
 					        		<td>
 					        			<div class="input-control text">
 		   									<input type="text" name="gebruikersnaam" />
-					    					<button class="btn-clear"></button>
 										</div>
 									</td>
 	            					<?php echo $_GET['usrnm']?'<td>Onbekende gebruikersnaam</td>':''; ?>
@@ -117,7 +121,6 @@
 	            					<td>
 	            						<div class="input-control password">
 	       									<input type="password" name="wachtwoord" />
-	       									<button class="btn-reveal"></button>
 	   									</div>
 									</td>
 	            					<?php echo $_GET['pswd']?'<td>Verkeerd wachtwoord</td>':''; ?>

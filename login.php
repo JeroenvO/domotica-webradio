@@ -1,4 +1,8 @@
-<?php session_start();
+<?php 
+	if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 $_SESSION['ID']=NULL;
 $_SESSION['level']=-1;
 $salt = 'asdflaskfjalsdkfj';

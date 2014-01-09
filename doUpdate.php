@@ -1,5 +1,8 @@
 <?php
-	session_start();
+	if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 	require './checkLevel.inc';
 	if($level > 0){
 		require 'cons/afdwaka.con';

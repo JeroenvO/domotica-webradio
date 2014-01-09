@@ -1,4 +1,9 @@
-<?php session_start()?>
+<?php
+	if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
+?>
 <!DOCTYPE html>
 <!--head-->
 <html>
@@ -371,16 +376,19 @@ function buildPage(page2load, data){
 	$('#cat-buttons').html(data.cbt); // cat buttons
 	$('#cat-page').html(data.cnt); //  page content
 	numCat = data.nmct;
+	page = page2load;
+	
+	initSliders(); //set the settings for all sliders, and the init values
+	initDateTimePickers(); //set the settings for all datetimepicker objects
 
 	setWidth(); //set the width of the page and the categories
-	initSliders(); //set the settings for all sliders, and the init values
-	setDateTimePickers(); //set the settings for all datetimepicker objects
 	setColor(data.color); //set the initial color, read from the db
 	
 	bindActions(); //bind actions to all buttons and so.
+
 	updateValues(); //set values for all controls that arent set automatically in loadPage
 	console.log('page ' + page2load + ' builded');
-	page = page2load;
+	
 }
 
 //load the data of a page asynchronous from loadPage.php.
