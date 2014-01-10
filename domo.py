@@ -12,16 +12,15 @@
 
 
 from time import sleep
-
 import os
-
 import RPi.GPIO as GPIO
-
 import subprocess
+import PyDatabase
+
 #import db and connect
-import MySQLdb
+# import MySQLdb
 #date and time
-import datetime
+# import datetime
 #time scheduler
 #from threading import Timer
 #
@@ -47,20 +46,38 @@ def checkUpdates(firstTime):
     ##read updates from database
 
     #create connection and cursor
-    con = connectDB()
-    cursor = con.cursor()
+    # con = connectDB()
+    # cursor = con.cursor()
+    db = PyDatabase.PyDatabase()
     #make query
-    qry = "SELECT settings.name, settings.value, settings.type, settings.extra from RPi.settings WHERE type IS NOT NULL"
+    # qry = "SELECT settings.name, settings.value, settings.type, settings.extra from RPi.settings WHERE type IS NOT NULL"
+    columns = ['name', 'value', 'type', 'extra']
+    results = None
     if not firstTime:
         #only get updated items
-        qry = qry + " AND changetime>='" + lastCheck + "'"
+        # qry = qry + " AND changetime>='" + lastCheck + "'"
+        condition = {
+            'type' : 'IS NOT NULL',
+            'changetime>' : lastCheck
+        }
+        results = db.Select(table='settings', columns=columns,condition_and=condition)
+        if not results:
+            print("could not execute query: " + db.query)
+    else:
+        condition = {
+            'type' : 'IS NOT NULL'
+        }
+        results = db.Select(table='settings', columns=columns,condition_and=condition)
+        if not results:
+            print("could not execute query: " + db.query)
+
     global lastCheck
     lastCheck = str(int(time10())-checkUpdateTime)
     #print('lastCheck: ' + lastCheck)
     #execute query
-    cursor.execute(qry)
+    # cursor.execute(qry)
     #fetch results
-    results = cursor.fetchall()
+    # results = cursor.fetchall()
     #Get the time, set lastcheck
     for row in results:
         nm = str(row[0])  # name of setting
@@ -87,8 +104,12 @@ def checkUpdates(firstTime):
         #drop down list items
         elif tp == "list":
             print("list " + nm + " to " + vl)
-            cursor.execute("SELECT settings.value FROM RPi.settings WHERE name='" + vl + "'")
-            result = cursor.fetchone()
+            # cursor.execute("SELECT settings.value FROM RPi.settings WHERE name='" + vl + "'")
+            # result = cursor.fetchone()
+            data = db.Select(table='settings', columns=['value'], condition_and={ 'name' : vl }, fetchall=False)
+            if not data:
+                print("Could not execute query: " + db.query)
+            result = data.fetchone()
             listItemValue = result[0]
             if nm == "radiostation":  # radio station changed
                 writeDB('geluidbron', 'Raspberry')  # Set amplifier input to radio
@@ -105,20 +126,32 @@ def checkUpdates(firstTime):
                 smoothVolume(vl)
 
     #close cursor and connection
-    cursor.close()
-    con.close()
+    # cursor.close()
+    # con.close()
+    db.Close()
 
 
 def writeDB(name, value):
-    try:
-        con = connectDB()
-        cursor = con.cursor()
-        qry2 = "UPDATE settings set value='" + con.escape_string(value) + "', changetime='" + time10() + "'  WHERE name='" + con.escape_string(name) + "'"
-        cursor.execute(qry2)
-        cursor.close()
-        con.close()
-    except:
-        print('writeDB failed, qry: ' + qry2)
+    # try:
+    # con = connectDB()
+    # cursor = con.cursor()
+    db = PyDatabase.PyDatabase()
+    # qry2 = "UPDATE settings set value='" + con.escape_string(value) + "', changetime='" + time10() + "'  WHERE name='" + con.escape_string(name) + "'"
+    values = {
+        'value' : db.Escape(value),
+        'changetime' : time10()
+    }
+    condition = {
+        'name' : db.Escape(name)
+    }
+    if not db.Update(table='settings', values=values, condition_and=condition):
+        print("Could not execute query: " + db.query)
+    # cursor.execute(qry2)
+    # cursor.close()
+    # con.close()
+# except:
+    #     print('writeDB failed, qry: ' + db.query)
+    db.Close()
 
 
 def writeUpdates():
@@ -240,81 +273,81 @@ def setPorts():
         GPIO.setup(output, GPIO.OUT)
 
 
-"""	
-########LOG FUNCTIONS
-#write a value in a log
-def writeLog(table,value):
-	#create connection and cursor
-	con = connectDB()
-	cursor = con.cursor()
-	#write 'value' in 'table'
-	cursor.execute("INSERT INTO "+table+" (value, timestamp) VALUES ('"+value+"', NOW())")
-	#close cursor
-	cursor.close()
-	#close con
-	con.close()
-
-#cpu temp logger
-def logCPUTemp():
-	proc = subprocess.Popen(["/opt/vc/bin/vcgencmd measure_temp"], stdout=subprocess.PIPE, shell=True)
-	(out, err) = proc.communicate()	
-	temp = out[5:7]
-	print "CPU Temperature = "
-	print temp
-	writeLog("log_CPUTemp",temp)
-
-#called by scheduler, calls logging functions
-def fillLogs():
-	logCPUTemp()
-	print "logging finished"
-	#every half hour, 1800secs
-	Timer(1800, fillLogs, ()).start()
-"""
+# """
+# ########LOG FUNCTIONS
+# #write a value in a log
+# def writeLog(table,value):
+# 	#create connection and cursor
+# 	con = connectDB()
+# 	cursor = con.cursor()
+# 	#write 'value' in 'table'
+# 	cursor.execute("INSERT INTO "+table+" (value, timestamp) VALUES ('"+value+"', NOW())")
+# 	#close cursor
+# 	cursor.close()
+# 	#close con
+# 	con.close()
+#
+# #cpu temp logger
+# def logCPUTemp():
+# 	proc = subprocess.Popen(["/opt/vc/bin/vcgencmd measure_temp"], stdout=subprocess.PIPE, shell=True)
+# 	(out, err) = proc.communicate()
+# 	temp = out[5:7]
+# 	print "CPU Temperature = "
+# 	print temp
+# 	writeLog("log_CPUTemp",temp)
+#
+# #called by scheduler, calls logging functions
+# def fillLogs():
+# 	logCPUTemp()
+# 	print "logging finished"
+# 	#every half hour, 1800secs
+# 	Timer(1800, fillLogs, ()).start()
+# """
 
 
 ######DB
-def connectDB():
-    while True:
-        try:
-            con = MySQLdb.connect(host="localhost", # your host, usually localhost
-                                  user="root", # your username
-                                  passwd="RPIJvO262SADF", # your password
-                                  db="RPi") # name of the data base
-            #autocommit changes and so autorefresh db
-            #print "db connected"
-            con.autocommit(True)
-            #print "autocommit enabled"
-            break
-        except:
-            print
-            "Error connecting to MYSQL, retrying"
-            sleep(2)
-    return con
+# def connectDB():
+#     while True:
+#         try:
+#             con = MySQLdb.connect(host="localhost", # your host, usually localhost
+#                                   user="root", # your username
+#                                   passwd="RPIJvO262SADF", # your password
+#                                   db="RPi") # name of the data base
+#             #autocommit changes and so autorefresh db
+#             #print "db connected"
+#             con.autocommit(True)
+#             #print "autocommit enabled"
+#             break
+#         except:
+#             print
+#             "Error connecting to MYSQL, retrying"
+#             sleep(2)
+#     return con
 
 ######MAIN
 #check instance, quit if already running
-"""
-file_handle = None
-def file_is_locked(file_path):
-    global file_handle 
-    file_handle= open(file_path, 'w')
-    try:
-        fcntl.lockf(file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return False
-    except IOError:
-        return True
-
-file_path = '/var/lock/domotica'
-
-if file_is_locked(file_path):
-    print 'another instance is running exiting now'
-    sys.exit(0)
-else:
-    print 'no other instance is running'
-    for i in range(5):
-        time.sleep(1)
-        print i + 1
-		"""
+# """
+# file_handle = None
+# def file_is_locked(file_path):
+#     global file_handle
+#     file_handle= open(file_path, 'w')
+#     try:
+#         fcntl.lockf(file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+#         return False
+#     except IOError:
+#         return True
+#
+# file_path = '/var/lock/domotica'
+#
+# if file_is_locked(file_path):
+#     print 'another instance is running exiting now'
+#     sys.exit(0)
+# else:
+#     print 'no other instance is running'
+#     for i in range(5):
+#         time.sleep(1)
+#         print i + 1
+# 		"""
 ##INIT
 #setPorts()
 

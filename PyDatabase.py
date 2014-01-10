@@ -28,12 +28,19 @@ class PyDatabase():
         self.query += " WHERE"
         if condition_and is not None:
             for condition in list(condition_and.keys()):
-                self.query += " " + condition + " = '" + str(condition_and[condition]) + "' AND"
+                if "IS" in condition_and[condition]:
+                    self.query += condition + condition_and[condition] + " AND"
+                else:
+                    self.query += " " + condition + "='" + str(condition_and[condition]) + "' AND"
             self.query = self.query.strip(" AND")
 
         if condition_or is not None:
             for condition in list(condition_or.keys()):
-                self.query += " " + condition + " = '" + str(condition_or[condition]) + "' OR"
+                if "IS" in condition_or[condition]:
+                    self.query += condition + condition_or[condition] + " OR"
+                else:
+                    self.query += " " + condition + "='" + str(condition_or[condition]) + "' OR"
+
             self.query = self.query.strip(" OR")
 
     def Update(self, table=None, values=None, condition_and=None, condition_or=None, execute=True):
@@ -90,6 +97,34 @@ class PyDatabase():
         except:
             return False
 
+    def Insert(self, table=None, values=None, execute=True):
+        if table is None or values is None:
+            return False
+
+        self.query = "INSERT INTO " + table + " ("
+
+        for column in list(values.keys()):
+            self.query += column + ", "
+        self.query = self.query.strip(", ")
+        self.query += ") VALUES ("
+        for value in list(values.values()):
+            if "(" in value and ")" in value:
+                self.query += value + ", "
+            else:
+                self.query += "'" + value + "', "
+
+        self.query = self.query.strip(", ")
+        self.query += ")"
+
+        if execute:
+            try:
+                self.cursor.execute(self.query)
+                return True
+            except:
+                return False
+
+    def Escape(self, value):
+        return self.cursor.escape_string(value)
 
     def Close(self):
         self.cursor.close()
