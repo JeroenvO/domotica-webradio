@@ -94,7 +94,11 @@ class PyDatabase():
         try:
             self.cursor.execute(self.query)
             if fetchall:
-                return self.cursor.fetchall()
+                results = self.cursor.fetchall()
+                if not results:
+                    return None
+                else:
+                    return results
             else:
                 return self.cursor
         except:

@@ -56,100 +56,88 @@ def checkUpdates(firstTime):
             'changetime>' : str(lastCheck)
         }
         results = db.Select(table='settings', columns=columns, condition_and=condition)
-        #if not results:
-        #    print("could not execute query: " + db.query)
+        if results is False:
+            GF.log("could not execute query: " + db.query,'E')
     else:
-        print("first time check, set every value")
+        GF.log("first time check, set every value",'N')
         condition = {
             'settings.type' : 'IS NOT NULL'
         }
         results = db.Select(table='settings', columns=columns, condition_and=condition)
-        if not results:
-            print("could not execute query: " + db.query)
+        if results is False:
+            GF.log("could not execute query: " + db.query,'E')
 
-    lastCheck = str(int(GF.time10())-checkUpdateTime)
+    lastCheck = str(int(GF.time10())-2*checkUpdateTime)
 
-    for row in results:
-        nm = str(row[0])  # name of setting
-        vl = str(row[1])  # value
-        tp = row[2]  # type
-        xt = str(row[3])  # extra info, pin nr
-        # toggling button
-        if tp == "toggle":
-            print("toggle " + nm)
-            #do something
-        # true-false switch for a port
-        elif tp == "tf" and xt.isdigit():
-            print("tf switch " + nm + " to " + vl)
-            try:
-                pn = int(xt)  # pin
-                #value should be 'True' or 'False'
-                if vl == "true":
-                    vl = True
-                else:
-                    vl = False
-                setOutput(pn, vl)
-            except:
-                print("Error, not possible to set " + str(pn) + " to " + str(vl))
-        #drop down list items
-        elif tp == "list":
-            print("list " + nm + " to " + vl)
-            # cursor.execute("SELECT settings.value FROM RPi.settings WHERE name='" + vl + "'")
-            # result = cursor.fetchone()
-            data = db.Select(table='settings', columns=['value'], condition_and={ 'name' : vl }, fetchall=False)
-            if not data:
-                print("Could not execute query: " + db.query)
-            result = data.fetchone()
-            listItemValue = result[0]
-            if nm == "radiostation":  # radio station changed
-                GF.update('geluidbron', 'Raspberry')  # Set amplifier input to radio
-                playRadio(listItemValue)
-            elif nm == "geluidbron":  # sound source changed
-                switchSound(listItemValue)  # choose sound source and play that source
-                if vl == "Raspberry":
-                    #raspberry sound source chosen
-                    resumeRadio()
-                else:
-                    pauseRadio()  # stop music playing
-        elif tp == "slider":      # slider input
-            if nm == "volume":    # change volume
-                smoothVolume(vl)
+    if results is not None:
+        # apply all changes
+        for row in results:
+            nm = str(row[0])  # name of setting
+            vl = str(row[1])  # value
+            tp = row[2]  # type
+            xt = str(row[3])  # extra info, pin nr
+            # toggling button
+            #if tp == "toggle":
+                #do something
+            # true-false switch for a port
+            if tp == "tf" and xt.isdigit():
+                try:
+                    pn = int(xt)  # pin
+                    #value should be 'True' or 'False'
+                    if vl == "true":
+                        vl = True
+                    else:
+                        vl = False
+                    setOutput(pn, vl)
+                except:
+                    GF.log("Error, not possible to set " + str(pn) + " to " + str(vl),'E')
+            #drop down list items
+            elif tp == "list":
+                # cursor.execute("SELECT settings.value FROM RPi.settings WHERE name='" + vl + "'")
+                #get selected list value.
+                data = db.Select(table='settings', columns=['value'], condition_and={ 'name' : vl }, fetchall=False)
+                if data is False:
+                    GF.log("Could not execute query: " + db.query, 'E')
+                result = data.fetchone()
+                listItemValue = result[0]
+                if nm == "radiostation":  # radio station changed
+                    GF.update('geluidbron', 'Raspberry')  # Set amplifier input to radio
+                    playRadio(listItemValue)
+                elif nm == "geluidbron":  # sound source changed
+                    switchSound(listItemValue)  # choose sound source and play that source
+                    if vl == "Raspberry":
+                        #raspberry sound source chosen
+                        resumeRadio()
+                    else:
+                        pauseRadio()  # stop music playing
+            elif tp == "slider":      # slider input
+                if nm == "volume":    # change volume
+                    smoothVolume(vl)
 
-    #close cursor and connection
-    # cursor.close()
-    # con.close()
     db.Close()
 
 
-
+##write new values to database
 def writeUpdates():
-    ##write new values to database
-    #create connection and cursor
-
-    #make query
     #qry = "SELECT settings.name from RPi.settings WHERE type='value'";
-    #execute query
-    #cursor.execute(qry)
-    #fetch results
-    #results = cursor.fetchall()
 
     #for row in results:
     radioText = getRadioText()
-    print("radiotext: " + radioText)
+    GF.log("radiotext: " + radioText,'N')
     GF.update('radioText', radioText)
 
 
 #####GPIO Functions
 #set output
 def setOutput(pin, value):
-    print("set " + pin + " to " + value)
+    GF.log("tf switch " + pin + " to " + value, 'S')
     #set gpio
 
 
 #####Sound Functions
 #switch audio inputs
 def switchSound(channel):
-    print("change soundinput to " + channel)
+    GF.log("change soundinput to " + channel, 'S')
     #switch the amplifier input to channel
     #some gpio actions
 
@@ -158,7 +146,7 @@ def switchSound(channel):
 #set radio volume
 def setVolume(volume):
     #change value
-    print("volume changed to " + volume)
+    GF.log("change volume to " + volume, 'S')
     subprocess.call(["mpc",  "volume", volume])
 
 
@@ -168,9 +156,8 @@ def smoothVolume(reachVolume):
     try:
         volume = int((subprocess.check_output("mpc").split('\n')[2])[8:10])  # get current volumevolume = 0
     except:
-        print("not possible to read volume, please try again")
+        GF.log("volume not changed",'E')
         return False
-    print("thisvolume = " + str(volume))
     while True:
         try:
             if reachVolume > (volume+10):  # increase volume
@@ -184,19 +171,19 @@ def smoothVolume(reachVolume):
             setVolume(str(volume))
             sleep(0.1)
         except:
-            print("not possible to set smooth volume")
+            GF.log("Failed to change volume",'E')
 
 
 #stop radio
 def stopRadio():
     #clear mpc to stop radio playing
-    print("radio stopped")
+    GF.log("mpc stopped",'S')
     subprocess.call(["mpc", "clear"])
 
 
 #play radio from stream
 def playRadio(stream):
-    print("start radio playing")
+    GF.log("radio started: " + stream, 'S')
     #stop and clear current stream
     subprocess.call(["mpc", "clear"])
     #make playlist
@@ -207,25 +194,26 @@ def playRadio(stream):
 
 #resume a paused radio
 def resumeRadio():
-    print("resume radio")
+    GF.log("mpc resumed", 'S')
     #play list
     subprocess.call(["mpc", "play"])
 
 
 #pause the radio
 def pauseRadio():
-    print("pause radio")
+    GF.log("mpc paused", 'S')
     #pause radio
-    os.system("mpc stop")
+    subprocess.call(["mpc", "clear"])
 
 
-#Get radio text, firs line of mpc output
+#Get radio text, firs line of mpc output, get text from radio, not supported by all stations
 def getRadioText():
-    #get text from radio, not supported by all stations
     txt = subprocess.check_output("mpc").split('\n')[0]
     a = ['volume:','repeat:','random:','single:','consume:']
     if all(x in txt for x in a):
+        #if the radio is not playing
         return 'Radio tekst is niet beschikbaar'
+    #otherwise return the radio text
     return txt
 
 #radio functions
@@ -283,18 +271,20 @@ while True:
         try:
             checkUpdates(False)
         except:
-            GF.log("check updates crashed, restarting",'E')
+            GF.log("error in checkupdates, trying again", 'E')
+
         #wait for next round
         sleep(checkUpdateTime)
+
         if writeUpdateCount == writeUpdateFactor:
             try:
                 writeUpdates()
                 writeUpdateCount = 0
                 GF.log("updates written","N")
             except:
-                GF.log("error in write, trying again",'E')
+                GF.log("error in write, trying again", 'E')
                 sleep(5)
 
     except:
-        GF.log("something went wrong, restarting in 10 secs",'E')
+        GF.log("error in main loop, restarting in 10 secs", 'E')
         sleep(10)
