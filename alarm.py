@@ -5,7 +5,7 @@
 #Jeroen van Oorschot 2013
 #check whether a alarm should play
 #check sleep timer auto off
-
+import GFunc
 #import db and connect
 # import MySQLdb
 import PyDatabase
@@ -13,41 +13,40 @@ import PyDatabase
 import datetime
 import time
 
-#time in 10*microseconds
-def time10():
-    return str(int(round(time.time() * 100)))
 
+GF = GFunc.GFunc()
 
 # start alarm
 def startAlarm(alarmParent, oneTimeAlarm):
     ##read updates from database
-    db = PyDatabase.PyDatabase()
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
     #disable if onetime
     if oneTimeAlarm:
         # qry2 = "UPDATE settings set value='false', changetime='" + time10() + "' WHERE SUBSTRING(settings.name,4,LENGTH(settings.name)-3)='alarmOn' AND parent='" + alarmParent + "'"
         values = {
-            'changetime' : time10()
+            'changetime' : str(GF.time10())
         }
         condition = {
             'SUBSTRING(settings.name,4,LENGTH(settings.name)-3)' : 'alarmOn',
             'parent' : alarmParent
         }
         if not db.Update(table='settings', values=values, condition_and=condition):
-            print("could not execute query: " + db.query)
-        # try:
-        #     cursor.execute(qry2)
-        # except:
-        #     print('error turning alarm off')
-        print('one time alarm turned off')
+            GF.log("could not execute query: " + db.query,'E')
+
+        GF.log('one time alarm turned off','N')
+
+    #for all alarms:
+
     #find volume, increasevolume
     # qry3 = "SELECT settings.name, SUBSTRING(settings.name,4,LENGTH(settings.name)-3), settings.value FROM RPi.settings where parent='" + alarmParent + "' ORDER BY settings.name"
+
     columns = ['name', 'SUBSTRING(settings.name,4,LENGTH(settings.name)-3)', 'value']
     condition = {
         'parent' : alarmParent
     }
     results = db.Select(table='settings', columns=columns, condition_and=condition, order='name')
     if results is False:
-        print("could not execute query: " + db.query)
+        GF.log("could not execute query: " + db.query,'E')
     # try:
     #     cursor.execute(qry3)
     # except:
@@ -60,36 +59,14 @@ def startAlarm(alarmParent, oneTimeAlarm):
         value = alarmSettings[2]
         if alarmSettings[1] == 'alarmVol':  # update volume, don't use increase vol yet
             # qry4 = "UPDATE settings set value='" + value + "', changetime='" + time10() + "' WHERE name='volume'"
-            values = {
-                'value' : value,
-                'changetime' : time10()
-            }
-            condition = {
-                'name' : 'volume'
-            }
-            if not db.Update(table='settings', values=value, condition_and=condition):
-                print("could not execute query: " + db.query)
-            # cursor.execute(qry4)
-        #turn radio on
-        # qry5 = "UPDATE settings set value='Raspberry', changetime='" + time10() + "' WHERE name='geluidbron'"
-        values = {
-            'value' : 'Raspberry',
-            'changetime' : time10()
-        }
-        condition = {
-            'name' : 'geluidbron'
-        }
-        if not db.Update(table='settings', values=values, condition_and=condition):
-            print("could not execute query: " + db.query)
+            GF.update('volume',value)
+            #turn radio on
+            # qry5 = "UPDATE settings set value='Raspberry', changetime='" + time10() + "' WHERE name='geluidbron'"
+            GF.update('geluidbron', 'Raspberry')
 
-        # try:
-        #     cursor.execute(qry5)
-        # except:
-        #     print("query execute error")
     # except:
     #     print('problem updating for start alarm')
-    # cursor.close()
-    # con.close()
+
     db.Close()
 
 
@@ -97,9 +74,8 @@ def startAlarm(alarmParent, oneTimeAlarm):
 def checkAlarm():
     ##read updates from database
     #create connection and cursor
-    db = PyDatabase.PyDatabase()
-    # con = connectDB()
-    # cursor = con.cursor()
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
+
     #make query
     qry = """select settings.name, settings.value, settings.parent from RPi.settings WHERE
         (
@@ -115,16 +91,13 @@ def checkAlarm():
         """
     results = db.Execute(qry)
     if results is False:
-        print("failed to execute query: " + db.query)
+        GF.log("failed to execute query: " + db.query,'E')
     #print(qry)
 # OR
 #SUBSTRING(settings.name,4,LENGTH(settings.name)-3)='alarmDays'
     #execute query
     #get all the times of alarms that are turned on
-    # try:
-    #     cursor.execute(qry)
-    # except:
-    #     print("query execute error")
+
     #fetch results
     th = time.strftime("%H", time.localtime())
     tm = time.strftime("%M", time.localtime())
@@ -151,9 +124,9 @@ def checkAlarm():
                     'SUBSTRING(settings.name,4,LENGTH(settings.name)-3)' : 'alarmDays'
                 }
                 columns = ['name', 'value']
-                results = db.Select(table='settings', columns, condition_and=condition, fetchall=False)
+                results = db.Select(table='settings', columns=columns, condition_and=condition, fetchall=False)
                 if results is False:
-                    print("failed to execute query: " + db.query)
+                    GF.log("failed to execute query: " + db.query,'N')
                 # try:
                 #     cursor.execute(qry)
                 # except:
@@ -161,55 +134,54 @@ def checkAlarm():
                 thisAlarm = results.fetchone()
                 if thisAlarm[1].count('false') == 7:   # everything false
                     # oneTimeAlarm = True
-                    print('one time alarm on: ' + time.strftime("%H %M", time.localtime()))
+                    GF.log('one time starting to ring: ' + time.strftime("%H %M", time.localtime()),'N')
                     try:
                         startAlarm(pt, True)
                     except:
-                        print('alarm kan niet afspelen')
+                        GF.log('alarm kan niet afspelen','E')
                 else:
                     # oneTimeAlarm = False
                     day = datetime.datetime.today().weekday()  # match days
                     onThisDay = thisAlarm[1][thisAlarm[1].index(str(day))+4:thisAlarm[1].index(str(day))+5]
                     # print('day: ' + str(day) + ' on this day: ' + str(ontThisDay) )
                     if onThisDay == 't':  # play alarm on this day and this time
+                        GF.log('repeating alarm starting to ring: ' + time.strftime("%H %M", time.localtime()),'N')
                         try:
-                            print('alarm on: ' + time.strftime("%H %M", time.localtime()))
                             startAlarm(pt, False)
                         except:
-                            print('alarm kan niet afspelen')
+                            GF.log('alarm failed to ring','E')
             #else:
                 #print("not equal alarm times")
         except:
-            print('error parsing and checking time')
-    #close cursor and connection
-    # cursor.close()
-    # con.close()
+            GF.log('error parsing and checking time','E')
+
     db.Close()
 
 
 def checkAutoOff():
     #create connection and cursor
-    db = PyDatabase.PyDatabase()
-    # con = connectDB()
-    # cursor = con.cursor()
-    #make query
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
+
     # qry = "select settings.value from RPi.settings WHERE settings.name='soundSleepTimer'"
-    condition = {
-        'name' : 'soundSleepTimer'
+    condition_and = {
+        'name' : 'soundSleepTimer',
+        'value!' : 'uit'
     }
-    data = db.Select(table='settings', colulmns=['value'], condition_and=condition,fetchall=False)
-    if data is False:
-        print('auto off failed query: ' + db.query)
-    #execute query
-    #get all the times of alarms that are turned on
-    # try:
-    #     cursor.execute(qry)
-    # except:
-    #     print("query execute error")
-    #fetch results
-    row = data.fetchone()[0]
-    #print(row)
-    if not row == 'uit':
+    results = db.Select(table='settings', columns=['value'], condition_and=condition_and,fetchall=False)
+    print(results)
+    for row in results:
+        print(row)
+    if results is False:
+        print('false')
+    print(results[0])
+    #if row is False:
+    #    GF.log('auto off failed query: ' + db.query, 'Q')
+
+
+    if results is not False:  # if data is returned, the amplifier should turn off automatically
+        row=results[0]
+        #GF.log(row,'q')
+
         try:
             vl = row.split(':')  # value
             #print(vl)
@@ -224,40 +196,18 @@ def checkAutoOff():
             th = time.strftime("%H", time.localtime())
             tm = time.strftime("%M", time.localtime())
             #print(th + ';' + tm)
+
             if ah == th and am == tm:  # time match
                 #turn amplifier off
-                print('auto off: ' + time.strftime("%H %M", time.localtime()))
+                GF.log('auto off: ' + time.strftime("%H %M", time.localtime()),'N')
                 # qry5 = "UPDATE settings set value='versterkerUit', changetime='" + time10() + "' WHERE name='geluidbron'"
-                values = {
-                    'value' : 'versterkerUit',
-                    'changetime' : time10()
-                }
-                condition = {
-                    'name' : 'geluidbron'
-                }
-                if not db.Update(table='settings', values=values, condition_and=condition):
-                    print("could not execute query: " + db.query)
-                # try:
-                #     cursor.execute(qry5)
-                # except:
-                #     print("query execute error")
+                GF.update('geluidbron','versterkerUit')
                 #disable the sound sleep timer
+
                 # qry6 = "UPDATE settings set value='uit', changetime='" + time10() + "' WHERE name='soundSleepTimer'"
-                values = {
-                    'value' : 'uit',
-                    'changetime' : time10()
-                }
-                condition = {
-                    'name' : 'soundSleepTimer'
-                }
-                if not db.Update(table='settings', values=values, condition_and=condition):
-                    print("could not execute query: " + db.query)
-                # try:
-                #     cursor.execute(qry6)
-                # except:
-                #     print("query execute error")
+                GF.update('soundSleepTimer', 'uit')
         except:
-            print('auto off failed')
+            GF.log('auto off failed', 'E')
 
     db.Close()
 
@@ -275,53 +225,20 @@ def checkReclame():
          'value' : 'true'
     }
     results = db.Select(table='settings', columns=['value'], condition_and=condition, fetchall=False)
-    if results is False:
-        print("could not execute query: " + db.query)
-    #execute query
-    #get all the times of alarms that are turned on
-    # try:
-    #     cursor.execute(qry)
-    # except:
-    #     print("query execute error")
-    #fetch results
-    if results.fetchone():
+    if results is not False:  # if skipAds is true
         try:
             tm = time.strftime("%M", time.localtime())
             if tm == 56:  # time match
                 #change station
                 # qry5 = "UPDATE settings set value='538nonstop40', changetime='" + time10() + "' WHERE name='radiostation'"
-                values = {
-                    'value' : '538nonstop40',
-                    'changetime' : time10()
-                }
-                condition = {
-                    'name' : 'radiostation'
-                }
-                if not db.Update(table='settings', values=values, condition_and=condition):
-                    print("could not execute query: " + db.query)
-                # try:
-                #     cursor.execute(qry5)
-                # except:
-                #     print("query execute error")
+                GF.update('radiostation', '538nonstop40')
 
             elif tm == 5:  # time match
                 #turn amplifier off
                 # qry5 = "UPDATE settings set value='3fm', changetime='" + time10() + "' WHERE name='radiostation'"
-                values = {
-                    'value' : '3fm',
-                    'changetime' : time10()
-                }
-                condition = {
-                    'name' : 'radiostation'
-                }
-                if not db.Update(table='settings', values=values, condition_and=condition):
-                    print("could not execute query: " + db.query)
-                # try:
-                #     cursor.execute(qry5)
-                # except:
-                #     print("query execute error")
+                GF.update('radiostation','3fm')
         except:
-            print('auto off failed')
+            GF.log('failed to skip radio reclame','E')
     db.Close()
 
 
@@ -345,9 +262,9 @@ def checkReclame():
 
 ######MAIN
 try:
-    checkAlarm()
+    #checkAlarm()
     checkAutoOff()
     #checkReclame()
     #print('finished')
 except:
-    print("something went wrong, quit")
+    GF.log("something went wrong, quiting alarm.py",'E')

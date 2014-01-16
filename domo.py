@@ -10,12 +10,13 @@
 #* alarm moved to alarm.py
 #* using subprocess ipv os
 
-
+import GFunc
 from time import sleep
 import os
 import RPi.GPIO as GPIO
 import subprocess
 import PyDatabase
+
 
 #import db and connect
 # import MySQLdb
@@ -31,54 +32,43 @@ import time
 checkUpdateTime = 0.1   # every x seconds the database is checked for updates
 writeUpdateFactor = 40  # every x updates of checkUpdateTime updates are written
 
-#time in 10*microseconds
-def time10():
-    return str(int(round(time.time() * 100)))
+#open the db functions and get the database login values
+GF = GFunc.GFunc()
 
-
-#clear mpc audio
+#clear mpc audio for a clean start
 subprocess.call(["mpc", "clear"])
 
 
 ######main update function
 #Get a value from the database
 def checkUpdates(firstTime):
+    #var used to check when the db was checked last
+    global lastCheck
     ##read updates from database
-
-    #create connection and cursor
-    # con = connectDB()
-    # cursor = con.cursor()
-    db = PyDatabase.PyDatabase()
-    #make query
-    # qry = "SELECT settings.name, settings.value, settings.type, settings.extra from RPi.settings WHERE type IS NOT NULL"
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
+    #  make query
     columns = ['name', 'value', 'type', 'extra']
     results = None
     if not firstTime:
         #only get updated items
-        # qry = qry + " AND changetime>='" + lastCheck + "'"
         condition = {
-            'type' : 'IS NOT NULL',
-            'changetime>' : lastCheck
+            'settings.type' : 'IS NOT NULL',
+            'changetime>' : str(lastCheck)
         }
-        results = db.Select(table='settings', columns=columns,condition_and=condition)
-        if not results:
-            print("could not execute query: " + db.query)
+        results = db.Select(table='settings', columns=columns, condition_and=condition)
+        #if not results:
+        #    print("could not execute query: " + db.query)
     else:
+        print("first time check, set every value")
         condition = {
-            'type' : 'IS NOT NULL'
+            'settings.type' : 'IS NOT NULL'
         }
-        results = db.Select(table='settings', columns=columns,condition_and=condition)
+        results = db.Select(table='settings', columns=columns, condition_and=condition)
         if not results:
             print("could not execute query: " + db.query)
 
-    global lastCheck
-    lastCheck = str(int(time10())-checkUpdateTime)
-    #print('lastCheck: ' + lastCheck)
-    #execute query
-    # cursor.execute(qry)
-    #fetch results
-    # results = cursor.fetchall()
-    #Get the time, set lastcheck
+    lastCheck = str(int(GF.time10())-checkUpdateTime)
+
     for row in results:
         nm = str(row[0])  # name of setting
         vl = str(row[1])  # value
@@ -112,7 +102,7 @@ def checkUpdates(firstTime):
             result = data.fetchone()
             listItemValue = result[0]
             if nm == "radiostation":  # radio station changed
-                writeDB('geluidbron', 'Raspberry')  # Set amplifier input to radio
+                GF.update('geluidbron', 'Raspberry')  # Set amplifier input to radio
                 playRadio(listItemValue)
             elif nm == "geluidbron":  # sound source changed
                 switchSound(listItemValue)  # choose sound source and play that source
@@ -131,28 +121,6 @@ def checkUpdates(firstTime):
     db.Close()
 
 
-def writeDB(name, value):
-    # try:
-    # con = connectDB()
-    # cursor = con.cursor()
-    db = PyDatabase.PyDatabase()
-    # qry2 = "UPDATE settings set value='" + con.escape_string(value) + "', changetime='" + time10() + "'  WHERE name='" + con.escape_string(name) + "'"
-    values = {
-        'value' : db.Escape(value),
-        'changetime' : time10()
-    }
-    condition = {
-        'name' : db.Escape(name)
-    }
-    if not db.Update(table='settings', values=values, condition_and=condition):
-        print("Could not execute query: " + db.query)
-    # cursor.execute(qry2)
-    # cursor.close()
-    # con.close()
-# except:
-    #     print('writeDB failed, qry: ' + db.query)
-    db.Close()
-
 
 def writeUpdates():
     ##write new values to database
@@ -168,7 +136,7 @@ def writeUpdates():
     #for row in results:
     radioText = getRadioText()
     print("radiotext: " + radioText)
-    writeDB('radioText', radioText)
+    GF.update('radioText', radioText)
 
 
 #####GPIO Functions
@@ -254,7 +222,11 @@ def pauseRadio():
 #Get radio text, firs line of mpc output
 def getRadioText():
     #get text from radio, not supported by all stations
-    return subprocess.check_output("mpc").split('\n')[0]
+    txt = subprocess.check_output("mpc").split('\n')[0]
+    a = ['volume:','repeat:','random:','single:','consume:']
+    if all(x in txt for x in a):
+        return 'Radio tekst is niet beschikbaar'
+    return txt
 
 #radio functions
 
@@ -271,58 +243,6 @@ def setPorts():
 
     for output in outputs:
         GPIO.setup(output, GPIO.OUT)
-
-
-# """
-# ########LOG FUNCTIONS
-# #write a value in a log
-# def writeLog(table,value):
-# 	#create connection and cursor
-# 	con = connectDB()
-# 	cursor = con.cursor()
-# 	#write 'value' in 'table'
-# 	cursor.execute("INSERT INTO "+table+" (value, timestamp) VALUES ('"+value+"', NOW())")
-# 	#close cursor
-# 	cursor.close()
-# 	#close con
-# 	con.close()
-#
-# #cpu temp logger
-# def logCPUTemp():
-# 	proc = subprocess.Popen(["/opt/vc/bin/vcgencmd measure_temp"], stdout=subprocess.PIPE, shell=True)
-# 	(out, err) = proc.communicate()
-# 	temp = out[5:7]
-# 	print "CPU Temperature = "
-# 	print temp
-# 	writeLog("log_CPUTemp",temp)
-#
-# #called by scheduler, calls logging functions
-# def fillLogs():
-# 	logCPUTemp()
-# 	print "logging finished"
-# 	#every half hour, 1800secs
-# 	Timer(1800, fillLogs, ()).start()
-# """
-
-
-######DB
-# def connectDB():
-#     while True:
-#         try:
-#             con = MySQLdb.connect(host="localhost", # your host, usually localhost
-#                                   user="root", # your username
-#                                   passwd="RPIJvO262SADF", # your password
-#                                   db="RPi") # name of the data base
-#             #autocommit changes and so autorefresh db
-#             #print "db connected"
-#             con.autocommit(True)
-#             #print "autocommit enabled"
-#             break
-#         except:
-#             print
-#             "Error connecting to MYSQL, retrying"
-#             sleep(2)
-#     return con
 
 ######MAIN
 #check instance, quit if already running
@@ -355,7 +275,7 @@ def setPorts():
 #check all settings
 checkUpdates(True)
 writeUpdateCount = 0
-print('starting')
+GF.log('starting','N')
 while True:
     try:
         writeUpdateCount += 1
@@ -363,18 +283,18 @@ while True:
         try:
             checkUpdates(False)
         except:
-            print("check updates crashed, restarting")
+            GF.log("check updates crashed, restarting",'E')
         #wait for next round
         sleep(checkUpdateTime)
         if writeUpdateCount == writeUpdateFactor:
             try:
                 writeUpdates()
                 writeUpdateCount = 0
-                print("updates written")
+                GF.log("updates written","N")
             except:
-                print("error in write, trying again")
+                GF.log("error in write, trying again",'E')
                 sleep(5)
 
     except:
-        print("something went wrong, restarting in 10 secs")
+        GF.log("something went wrong, restarting in 10 secs",'E')
         sleep(10)
