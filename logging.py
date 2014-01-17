@@ -18,6 +18,7 @@ import subprocess
 #import db and connect
 # import MySQLdb
 import PyDatabase
+import GFunc
 #date and time
 #import datetime
 #time scheduler
@@ -26,7 +27,9 @@ import PyDatabase
 #import time
 #import fcntl
 #import sys
-			
+
+
+GF = GFunc.GFunc()
 
 ######main update function
 #Get a value from the database
@@ -54,11 +57,9 @@ def setPorts():
 ########LOG FUNCTIONS
 #write a value in a log
 def writeLog(table,value):
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
     #create connection and cursor
-    db = PyDatabase.PyDatabase()
-    # con = connectDB()
-    # cursor = con.cursor()
-    #write 'value' in 'table'
+
     # cursor.execute("INSERT INTO "+table+" (value, timestamp) VALUES ('"+value+"', NOW())")
     values = {
         'value' : value,
@@ -66,18 +67,15 @@ def writeLog(table,value):
     }
     if not db.Insert(table=table, values=values):
         print("Could not execute query: " + db.query)
-    #close cursor
-    # cursor.close()
-    #close con
-    # con.close()
+
     db.Close()
 #cpu temp logger
 def logCPUTemp():
     proc = subprocess.Popen(["/opt/vc/bin/vcgencmd measure_temp"], stdout=subprocess.PIPE, shell=True)
     (out, err) = proc.communicate()
     temp = out[5:7]
-    print("CPU Temperature = ")
-    print(temp)
+    #print("CPU Temperature = ")
+    #print(temp)
     writeLog("log_CPUTemp",temp)
 
 #called by scheduler, calls logging functions

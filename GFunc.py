@@ -48,6 +48,21 @@ class GFunc():
         db.Close()
 
 
+     #sends a changed value over sockets to domo.py
+    def send(self, name, value):
+        db = PyDatabase.PyDatabase(host=self.DBLogin["host"], user=self.DBLogin["user"], passwd=self.DBLogin["passwd"], db=self.DBLogin["db"])
+        values = {
+            'value' : value,
+            'changetime' : str(self.time10())
+        }
+        condition = {
+            'name' : name
+        }
+        if not db.Update(table='settings', values=values, condition_and=condition):
+            self.log("Could not execute query: " + db.query,'E')
+        db.Close()
+
+
     #log
     #code: U unspeciefied, E error, N notice, S setting, D debug
     def log(self, txt, code="Unspecified"):
