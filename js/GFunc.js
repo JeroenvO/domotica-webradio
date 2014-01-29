@@ -104,13 +104,8 @@ function login(username, password, server, port){
 //post a changed setting to the server
 function sendValue(name,value)
 {            
-    var data = {
-        'name': name,
-        'value': value
-    }
-    var postData = JSON.stringify(data)
     STATE = 2;
-    SOCKET.send(postData);        
+    SOCKET.send('{"'+name+'":"'+value'"}');        
 }
 
 //post a value asynchronous via doUpdate.php to the database

@@ -60,8 +60,7 @@ def applySetting(name, value):
             settings[nm][1] = vl
         except:
             # setting not found, so settings is not complete or arguments not correct, assuming first. Re-init and restart now
-            GF.log('name of setting: ' + str(nm) + ' not found, settings dict might be incomplete. Re-init now.', 'E')
-            initDomo()
+            GF.log('name of setting: ' + str(nm) + ' not found', 'E')
             return False
         GF.log('applySetting setting "'+name+'" to "' +value+'"','N')
         # toggling button
@@ -139,10 +138,10 @@ def setVolume(volume):
 def smoothVolume(reachVolume):
     reachVolume = int(reachVolume)
     try:
-        volume = int((subprocess.check_output("mpc").split('\n')[2])[8:10])  # get current volumevolume = 0
+        volume = int(settings['volume'][1])
     except:
-        GF.log("volume not changed",'E')
-        return False
+        GF.log("Current volume could not be read, using 0",'N')
+        volume = 0
     while True:
         try:
             if reachVolume > (volume+10):  # increase volume
@@ -188,7 +187,7 @@ def resumeRadio():
 def pauseRadio():
     GF.log("mpc paused", 'S')
     #pause radio
-    subprocess.call(["mpc", "clear"])
+    subprocess.call(["mpc", "pause"])
 
 
 #Get radio text, firs line of mpc output, get text from radio, not supported by all stations
@@ -400,18 +399,24 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     self.SendClient("WARNING: message is too long")
                     GF.log("client " + str(user[2]) + " tried sending a too long message")
                 else: # normal data received. Not a command
-                    self.SendClient("OK")  # send receive confirmation
+                    #self.SendClient("OK")  # send receive confirmation
                     try:  # assuming json
                         data = json.loads(self.data)
-                        dName = str(data['name'])
-                        dValue = str(data['value'])
-                        GF.log(dName + ' val: '+dValue)
-                        if dValue is not None and dName != '':
-                            applySetting(dName, dValue)
-                            SendRound(dName,settings[dName][0],dValue)
+                        for key, value in data.items():
+                            #GF.log(key + ' val: '+value, "D")
+                            if value is not None and key != '':
+                                applySetting(key, value)  # apply setting and put in dictionary
+                                try:
+                                    SendRound(key,settings[key][0],value,self)
+                                except:
+                                    GF.log("Error in sending the setting round to others" ,'E')
+                                self.SendClient("OK")
+                            else:
+                                self.SendClient("WARNING: empty request")
+                                GF.log("empty message received",'E')
                     except:  # wrong assumption
-                        GF.log('Received message: ' + self.data + ' not decoded','E')
-                        self.SendClient("WARNING: Not a command an no JSON. Invalid message")
+                        GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
+                        self.SendClient("WARNING: Not a command or invalid name or type")
 
             except:
                 GF.log("INFO: client "+username+" from "+addr+" disconnected",'N')
@@ -537,20 +542,25 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 #   return p.sub('', data)
 
 def SendRound(name, type, value, sender):
-    if type(name) == str and value is not None and name != '' and type(type) == str and type != '':
+    name = str(name)
+    type = str(type)
+    value = str(value)
+    GF.log("sendround, sending change: " + name + "; [ "+ type + " , "+ value + "]", "N")
+    if value != '' and name != '' and type != '':
         for u in connection:
-            #if u[0] != Owner:  # don't send back to sender
-            Class = u[5]
-            try:
-                data = json.dumps({name : ( type, value) })  # { name : [ type, value] }
-                loginData = json.loads(str(data, "utf-8"))
-                #name; type; value in JSON
-                if Class.websocket:
-                    Class.request.sendall(Class.create_frame(data))
-                else:
-                    Class.request.sendall(bytes(data, "utf-8"))
-            except:
-                GF.log("ERROR: failed to send message to user: "+u[0])
+            if u[5] != sender:  # don't send back to sender
+                Class = u[5]
+                try:
+                    data = json.dumps({name : ( type, value) })  # { name : [ type, value] }
+                    loginData = json.loads(str(data, "utf-8"))
+                    #name; type; value in JSON
+                    if Class.websocket:
+                        Class.request.sendall(Class.create_frame(data))
+                    else:
+                        Class.request.sendall(bytes(data, "utf-8"))
+                except:
+                    GF.log("ERROR: failed to send message to user: "+u[0])
+
     else:
         return False
 def disconnect():
