@@ -41,11 +41,11 @@ function login(username, password, server, port){
         
         SOCKET.onmessage = function(event){
             msg = event.data;
-            log("state: " + STATE + "; message received: " + msg )
+            //log("state: " + STATE + "; message received: " + msg )
             switch(STATE)
             {
             case 1:
-                //handle incoming messages
+                //handle incoming messagesrea
                 try{
                     var values = eval('(' + msg + ')');
                 }catch(exception){
@@ -103,9 +103,17 @@ function login(username, password, server, port){
 
 //post a changed setting to the server
 function sendValue(name,value)
-{            
-    STATE = 2;
-    SOCKET.send('{"'+name+'":"'+value'"}');        
+{      
+    if(SOCKET.readyState == 1){
+        var data = '{"'+name+'":"'+value+'"}';
+        log("sending: " + data);
+        STATE = 2;
+        SOCKET.send(data);  
+    }else{
+        log('Socket Status: ' + SOCKET.readyState+' (Closed)');
+        alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')
+        STATE = 1;
+    }     
 }
 
 //post a value asynchronous via doUpdate.php to the database
