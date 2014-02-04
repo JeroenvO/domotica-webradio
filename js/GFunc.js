@@ -11,7 +11,7 @@ $(document).ready(function(){
     }
     log("browser check passed");
 
-    log("client loaded");
+    //log("client loaded");
 });
 
 //log a notice or error
@@ -26,9 +26,9 @@ function login(username, password, server, port){
     try
     {
         SOCKET = new WebSocket(host);
-        log('Socket Status: ' + SOCKET.readyState);
+        //log('Socket Status: ' + SOCKET.readyState);
         SOCKET.onopen = function(){
-            log('Socket Status: ' + SOCKET.readyState+' (open)');
+            //log('Socket Status: ' + SOCKET.readyState+' (open)');
             log("Connected! trying to login...");
             var logindata = {
                 'username': username,
@@ -48,10 +48,11 @@ function login(username, password, server, port){
                 //handle incoming messagesrea
                 try{
                     var values = eval('(' + msg + ')');
+                    //console.log("received message: builded: " + builded);
+                    updateValuesJSON(values);
                 }catch(exception){
                     log("error parsing incoming JSON: " + exception);
                 }
-                log("received: " + msg);
                 //not yet made
                 break;
             case 2:
@@ -82,7 +83,7 @@ function login(username, password, server, port){
                     log(exp + msg[1]);
                     //alert (exp + msg);
                 }
-                STATE = 2;  //back to state 2 to receive normal messages
+                STATE = 1;  //back to state 2 to receive normal messages
                 break;
             }
         }
@@ -99,6 +100,20 @@ function login(username, password, server, port){
     {
         log("Error occured: " + exception);
     }
+}
+function updateValuesJSON (values){
+	if(builded){
+	    for (var key in values){
+		    name = key;
+		    type = values[key][0];
+		    value = values[key][1];
+		    //log("msg received: set " + name + " ("+ type +") to "+ value);
+		    updateValue(name, type, value);
+		}
+	}else{
+		setTimeout(function(){updateValuesJSON(values)},200);
+	}
+	
 }
 
 //post a changed setting to the server

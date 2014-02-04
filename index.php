@@ -20,9 +20,8 @@
 		<script type="text/javascript" src="./js/jquery-2.0.3.min.js"></script>
 
 		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
-		<link href="./css/modern.css" rel="stylesheet" />
-		<link href="./css/modern-responsive.css" rel="stylesheet" />
-		<link href="./css/site.css" rel="stylesheet" type="text/css" />
+		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
+
 
 		<!--<script type="text/javascript" src="./js/modern/input-control.js"></script>-->
 		<title>Raspberry || Home</title>
@@ -63,7 +62,7 @@
 
 		</script>
 	</head>
-	<body class="metrouicss">
+	<body class="metro">
 		<div id="container">
       		<div id="header">
     			<div id="pagetitle">

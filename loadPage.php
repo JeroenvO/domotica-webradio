@@ -45,10 +45,10 @@ if(isset($_GET['page'])){
 			while($row_pag=$res_pag->fetch_assoc()){//pages
 				if($row_pag['level'] <= $level){
 					if($row_pag['name'] != $pag_nam){
-						$pbt .= '<a class="button pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"><i class="icon-'.$row_pag['value'].'"></i><span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></a>';
+						$pbt .= '<a class="button pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"> <i class="icon-'.$row_pag['value'].'"></i><span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></a>';
 					}
 					else{
-						$pbt = '<a class="button smallButton pag-button" id="'.$pag_nam.'" title="'.$row_pag['desc'].'"><img src="./images/reload-icon-2.png" /></a>'.$pbt;
+						$pbt = '<a class="button smallButton pag-button" id="'.$pag_nam.'" title="'.$row_pag['desc'].'"> <img src="./images/reload-icon-2.png" /></a>'.$pbt;
 					}
 				}
 				else{
@@ -70,7 +70,7 @@ if(isset($_GET['page'])){
 					$cat = $row_cat['desc'];		
 					$Cat = ucfirst($cat);
 					$cnt.='<div class="cat" id="cat'.$i.'"><h3>'.$Cat.'</h3>';//category div and title
-					$cbt .= '<a class="button left cat-button" id="cat'.$i.'link" title="Ga naar '.$Cat.'"><i class="icon-'.$row_cat['value'].'"></i><span class="catlinktxt">'.$Cat.'</span></a>';//cat buttons
+					$cbt .= '<a class="button left cat-button" id="cat'.$i.'link" title="Ga naar '.$Cat.'"> <i class="icon-'.$row_cat['value'].'"></i><span class="catlinktxt">'.$Cat.'</span></a>';//cat buttons
 						//subcategories, inside a category there are subcategories, these have a colored heading
 						$qry_sbc = 'select * from '.$table.' where parent=\''.$row_cat['name'].'\' order by vlgrd';
 						if(!$res_sbc = $db_con->query($qry_sbc)){
@@ -97,7 +97,7 @@ if(isset($_GET['page'])){
 												case 'tf': //default, true/false
 													//$checked = "";//"($row_opt['value']=='true')?'checked=""':'';
 													$cnt .='<label class="input-control switch">
-																<input class="input-tf" type="checkbox" id="'.$row_opt['name'].'" '.$checked.' />
+																<input class="input-tf" type="checkbox" id="'.$row_opt['name'].'" />
 																<span class="helper bgColor"><span class="switch-text" id="'.$row_opt['name'].'-txt"></span></span>
 															</label>';
 												break;
@@ -107,7 +107,7 @@ if(isset($_GET['page'])){
 												case 'media': //media controls
 												break;
 												case 'list':
-												$cnt .=  '<form class="input-list" id="'.$row_opt['name'].'">';
+												$cnt .=  '<div class="input-list" id="'.$row_opt['name'].'">';
 													//make items
 													
 													$qry_dwn = 'select '.$table.'.name, '.$table.'.desc from '.$table.' where parent=\''.$row_opt['name'].'\' order by vlgrd';
@@ -116,20 +116,20 @@ if(isset($_GET['page'])){
 													while($row_dwn=$res_dwn->fetch_assoc()){//each option
 														$checked = "";//"($row_dwn['name']===$row_opt['value'])?'checked="checked"':'';
 														$cnt .= '
-															<div class="input-control radio default-style">
-														<label>
-															<input type="radio" name="'.$row_opt['name'].'" id="'.$row_dwn['name'].'" '.$checked.' />
-															<span class="check"></span>
-															'.$row_dwn['desc'].'
-														</label>
-													</div><br />';
+															<div class="input-control radio default-style margin5" data-role"input-control">
+																<label>
+																	<input type="radio" name="'.$row_opt['name'].'" id="'.$row_dwn['name'].'" data-transform="input-control" />
+																	<span class="check"></span>
+																	'.$row_dwn['desc'].'
+																</label>
+															</div><br />';
 													/*	<label>
 															<input type="radio" name="'.$row_opt['name'].'" id="'.$row_dwn['name'].'" '.$checked.' />
 															<span class="helper">'.$row_dwn['desc'].'</span>
 														</label><br />
 					';*/
 													}
-													$cnt .= '</form>';
+													$cnt .= '</div>';
 													$res_dwn->close();
 					
 												break;
@@ -138,8 +138,8 @@ if(isset($_GET['page'])){
 												break;
 												case 'slider':
 												$cnt .= '	
-															<div class="input-slider slider" id="'.$row_opt['name'].'" data-init-value="'.$row_opt['value'].'"></div>
-															<span class="input-slider" id="'.$row_opt['name'].'-txt">'.$row_opt['value'].'</span>
+															<div class="input-slider noUiSlider" id="'.$row_opt['name'].'""></div>
+															<span class="input-slider" id="'.$row_opt['name'].'-txt"></span>
 														';
 												break;
 												case 'time':

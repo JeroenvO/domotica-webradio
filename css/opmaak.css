@@ -9,7 +9,7 @@ body{
 	width:99%;
 	margin: 0px;
 	top: 0px !important;/*Hide translate bar space on top of screen*/
-	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-family: 'Segoe UI', Verdana, Geneva, Arial, Helvetica, sans-serif;
 	background-color:#eee;
 	min-width:300px;
 	background-color: #fff;
@@ -40,6 +40,7 @@ div#footer{
 #pagetitle{
 	float:left;
 	margin-left:20px;
+	white-space: nowrap;
 }
 
 
@@ -48,16 +49,20 @@ div#footer{
 	position:fixed;
 	right:0px;
 	top:5px;
-	padding: 1px;
-	margin:0px;
+	padding: 3px;
+	margin:3px;
 	z-index: 10; /*fix for weird behaviour when cliced*/
 	
 }
 #cat-buttons{
-	padding:1px;
+	padding:3px;
+	margin: 3px;
 	margin-top:50px;
 	float:left;
 	overflow:visible;
+}
+i{ /*images on buttons from metro ui*/
+	margin-right: 2px;
 }
 div#contentpage{
 	margin-top:70px;
