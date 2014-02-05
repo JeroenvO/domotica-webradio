@@ -18,7 +18,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 
 		<script type="text/javascript" src="./js/jquery-2.0.3.min.js"></script>
-
+		<script type="text/javascript" src="./js/metro-input-control.js"></script>
 		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
 		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
 
@@ -87,12 +87,12 @@
                     <p>
 			        <?php 
 					if(isset($_SESSION['usernm'])){ //if loged in
-						echo 'U bent ingelogd als '.$_SESSION['usernm'].'. U heeft niveau '.$_SESSION['level'].'. <br /><a href="login.php?log=uit" class="button" title="Log uit">Log uit</a><br /><br />';
+						echo 'U bent ingelogd als '.$_SESSION['usernm'].'. U heeft niveau '.$_SESSION['level'].'. <br /><br />
+						<a href="login.php?log=uit" class="button" title="Log uit">Log uit</a><br /><br />';
 					}
 					if($level >= 0){ //if valid user, if local or if logged in
-						echo '<a href="settings.php" class="button" title="ga verder">Ga naar settings</a>';
+						echo '<a href="control.php" class="button" title="ga verder">Ga naar control</a>';
 						if($level > 1){ //show extra buttons if level is 2
-							echo '<a href="poweroff.php" class="button" title="Raspberry uitzetten"><i class="icon-switch"></i>Raspberry uitzetten</a>';
 							echo '<br /><a href="http://192.168.1.104/phpmyadmin">PhpMyAdmin</a>'; 
 						}
 						if($local){ //if local user, show link for extern viewing
@@ -104,28 +104,25 @@
 						 echo 'Log hieronder in om naar de instellingen te gaan';
 
 					?>
+					<br />
 					  	<form action="login.php" method="post">
-					    	<table class="hovered bordered">
+					    	<table>
 					      		<tr id="gebruikersnaam" <?php echo $_GET['usrnm']?'class="'.$_GET['usrnm'].'"':'' ?>>
 					        		<td> Gebruikersnaam: </td>
 					        		<td>
-					        			<div class="input-control text">
-		   									<input type="text" name="gebruikersnaam" />
-										</div>
+		   								<input type="text" name="gebruikersnaam" data-transform="input-control" />
 									</td>
 	            					<?php echo $_GET['usrnm']?'<td>Onbekende gebruikersnaam</td>':''; ?>
 	            				</tr>
 	          					<tr id="wachtwoord" <?php echo $_GET['pswd']?'class="'.$_GET['pswd'].'"':'' ?>>
 	            					<td> Wachtwoord: </td>
 	            					<td>
-	            						<div class="input-control password">
-	       									<input type="password" name="wachtwoord" />
-	   									</div>
+	       								<input type="password" name="wachtwoord" data-transform="input-control" />
 									</td>
 	            					<?php echo $_GET['pswd']?'<td>Verkeerd wachtwoord</td>':''; ?>
 	            				</tr>
 	        				</table>
-	        				<input class="left bg-color-blue" type="submit" value="Inloggen" />
+	        				<input type="submit" value="Inloggen" />
 	      				</form>
           			<?php } ?>
         		</div>

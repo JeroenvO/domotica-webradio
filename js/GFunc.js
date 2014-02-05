@@ -65,23 +65,23 @@ function login(username, password, server, port){
                     msg = msg.split(':');
                     switch(msg[0]){
                         case "ERROR":
-                            exp = "server send an error: ";
+							alert("Something went wrong in the server: "+msg[1]+"\nNow going back to login");
+							window.location = "/login.php?log=uit";
                             //back to loginpage
                         break;
                         case "WARNING":
-                            exp = "The operation you tried is not permitted, nothing happened. Reason: ";
+                            alert("The operation you tried is not permitted, nothing happened.\nReason: ");
                             //do nothing
                         break;
                         case "RESPONSE":
-                            exp = "The server send a message back: ";
+                            log("The server send a message back: ");
                             //do something with the received data
                         break;
                         default:
-                            exp = "The server send an invalid message back: ";
+                            log("The server send an invalid message back: ");
                         break;
                     }
-                    log(exp + msg[1]);
-                    //alert (exp + msg);
+
                 }
                 STATE = 1;  //back to state 2 to receive normal messages
                 break;

@@ -28,12 +28,13 @@ import PyDatabase  # for database
 import socketserver
 import threading
 import struct
-#users = []
+import sys
+
 connection = []
 connectedClients= []
 #bannedips = []
 MAXCHARS = 124
-allowedIPs = ['100','101','102','103']
+allowedIPs = ['100','101','102','103','104']
 
 #####
 #some constants
@@ -47,60 +48,72 @@ GF = GFunc.GFunc()
 
 ######main update function
 #Apply a changed setting
-def applySetting(name, value):
-        # read arguments
+def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='none': send to no-one; sender=self: all but sender
+    #GF.log("applysetting: "+name+':'+str(value)+' send to: '+str(sendTo),"D")
+    tp = settings[name][0]  # row[2]  # type
     if type(name) == str and value is not None and name != '':
-        nm = name
-        vl = str(value)  # value
+        value = str(value)  # value
         #settings: {key : [type, value, extra] }
         #update settings dictionary
         try:
-            tp = settings[nm][0]  # row[2]  # type
-            xt = settings[nm][2]  # str(row[3])  # extra info, pin nr
-            settings[nm][1] = vl
+            settings[name][1] = value
         except:
             # setting not found, so settings is not complete or arguments not correct, assuming first. Re-init and restart now
-            GF.log('name of setting: ' + str(nm) + ' not found', 'E')
+            GF.log('name of setting: ' + str(name) + ' not found', 'E')
             return False
-        GF.log('applySetting setting "'+name+'" to "' +value+'"','N')
-        # toggling button
-        #if tp == "toggle":
-            #do something
-        # true-false switch for a port
-        if tp == "tf" and xt is not None and xt.isdigit():
-            try:
-                pn = int(xt)  # pin
-                #value should be 'True' or 'False'
-                if vl == "true":
-                    vl = True
-                else:
-                    vl = False
-                setOutput(pn, vl)
-            except:
-                GF.log("Error, not possible to set " + str(pn) + " to " + str(vl),'E')
-        #drop down list items
-        elif tp == "list":
-            listItemValue = settings[vl][1]  # get value of selected item in list. Value of list is the name of the selected item
-            if nm == "radiostation":  # radio station changed
-                GF.update('geluidbron', 'Raspberry')  # Set amplifier input to radio
-                playRadio(listItemValue)
-            elif nm == "geluidbron":  # sound source changed
-                switchSound(listItemValue)  # choose sound source and play that source
-                if vl == "Raspberry":
-                    #raspberry sound source chosen
-                    setVolume(0)
-                    resumeRadio()
-                    smoothVolume(settings['volume'][1])
-                else:
-                    smoothVolume(0)
-                    pauseRadio()  # stop music playing
-                    setVolume(settings['volume'][1])
-        elif tp == "slider":      # slider input
-            if nm == "volume":    # change volume
-                smoothVolume(vl)
+        try:
+            data = json.dumps({name : ( tp, value) })  # { name : [ type, value] }
+            if sendTo == 'all':
+                sendRound(data, False)
+            elif sendTo != 'none':
+                sendRound(data,sendTo)
+        except:
+            GF.log("Error in sending the setting round to others" ,'E')
     else:
         GF.log('invalid arguments: [ name: ' + str(name) + ' ; value: ' + str(value) + ' ] supplied to applysetting()', 'E')
 
+    # read arguments
+
+    xt = settings[name][2]  # str(row[3])  # extra info, pin nr
+    value = str(value)
+    GF.log('applySetting setting "'+name+'" to "' +value+'"','N')
+    # toggling button
+    #if tp == "toggle":
+        #do something
+    # true-false switch for a port
+    if tp == "tf" and xt is not None and xt.isdigit():
+        try:
+            pn = int(xt)  # pin
+            #value should be 'True' or 'False'
+            if value == "true":
+                value = True
+            else:
+                value = False
+            setOutput(pn, value)
+        except:
+            GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
+    #drop down list items
+    elif tp == "list":
+        listItemValue = settings[value][1]  # get value of selected item in list. Value of list is the name of the selected item
+        if name == "radiostation":  # radio station changed
+            applySetting('geluidbron', 'Raspberry','all')  # Set amplifier input to radio
+            playRadio(listItemValue)
+        elif name == "geluidbron":  # sound source changed
+            switchSound(listItemValue)  # choose sound source and play that source
+            if value == "Raspberry":
+                #raspberry sound source chosen
+                setVolume(0)
+                resumeRadio()
+                smoothVolume(settings['volume'][1])
+            else:
+                smoothVolume(0)
+                pauseRadio()  # stop music playing
+                setVolume(settings['volume'][1])
+    elif tp == "slider":      # slider input
+        if name == "volume":    # change volume
+            smoothVolume(value)
+
+#def setSetting(name, value, sender=False):
 
 
 ##write new values to database
@@ -187,7 +200,7 @@ def resumeRadio():
 def pauseRadio():
     GF.log("mpc paused", 'S')
     #pause radio
-    subprocess.call(["mpc", "pause"])
+    subprocess.call(["mpc", "stop"])
 
 
 #Get radio text, firs line of mpc output, get text from radio, not supported by all stations
@@ -257,6 +270,8 @@ def initDomo():
     # make settings dict, to use in stead of database
     global settings
     settings = {}
+    global storeData
+    storeData = {}
     # fill settings from the database
     results = db.Select(table='settings', columns=columns, condition_and=condition)
     if results is False:
@@ -269,7 +284,7 @@ def initDomo():
     GF.log('dict: ' + str(settings), 'D')
     #apply loaded settings for init
     for key, value in settings.items():
-        applySetting(key, value[1])  # apply setting, sending key, value
+        applySetting(str(key), value[1], 'none')  # apply setting, sending key, value. Dont send to clients
 
     GF.log('Init complete, starting now!','N')
 
@@ -277,32 +292,6 @@ def initDomo():
 writeUpdateCount = 0
 settings = {}
 initDomo()
-
-#while True:
- #   try:
-   #     writeUpdateCount += 1
-        #check only updated settings
-        #try:
-            #checkUpdates(False)
-        #except:
-            #GF.log("error in checkupdates, trying again", 'E')
-
-        #wait for next round
-    #    sleep(checkUpdateTime)
-
-    #    if writeUpdateCount == writeUpdateFactor:
-   #         try:
-  #              writeUpdates()
-   #             writeUpdateCount = 0
-   #             GF.log("updates written","N")
-   #         except:
-    #            GF.log("error in write, trying again", 'E')
-   #             sleep(5)
-
-  #  except:
-  #      GF.log("error in main loop, restarting in 10 secs", 'E')
-   #     sleep(10)
-
 
 ############################### Socketservers tuff
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -342,7 +331,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         validUser = False
         if addr[0:9] == '192.168.1':
             if addr[10:13] in allowedIPs:  # local user
-                user = ['local', 2, 'Lokale gebruiker', None, addr, self]
+                user = [username, 2, 'Lokale gebruiker', None, addr, self]
                 validUser = True
                 GF.log('Local user accepted', "N")
                 self.sendClient("OK, valid login as local user")
@@ -395,29 +384,39 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 self.data = str(data, "utf-8")
                 if self.data == "":  # skip if empty data
                     continue
-                GF.log("user "+str(user[2])+" send message: "+self.data, 'N')
+                GF.log("user "+str(user[0])+" send message: "+self.data, 'N')
                 if self.data == "testresponse":
                     self.sendClient("RESPONSE: Test complete!")
-                    GF.log("client "+ str(user[2]) +" requested test response", 'N')
+                    GF.log("client "+ str(user[0]) +" requested test response", 'N')
                     continue
+                if self.data == "close" and not self.websocket: # normal socket wants to close
+                    self.shutdown(1)
+                    self.close()
+                if self.data.split(":")[0] == 'storeData':  # store some data for some other function
+                    data = json.loads(self.data.split(":")[1])
+                    for key, value in data.items():
+                        #GF.log(key + ' val: '+value, "D")
+                        if value is not None and key != '':
+                            storeData[key] = value;
+                if self.data.split(":")[0] == 'getData':  # store some data for some other function
+                    try:
+                        self.sendClient(storeData[self.data.split(":")[1]])
+                    except:
+                        self.sendClient("ERROR, data not available")
                 global MAXCHARS
                 if len(self.data) > MAXCHARS:
                     self.sendClient("WARNING: message is too long")
-                    GF.log("client " + str(user[2]) + " tried sending a too long message")
+                    GF.log("client " + str(user[0]) + " tried sending a too long message")
                 else: # normal data received. Not a command
                     #self.sendClient("OK")  # send receive confirmation
                     if user[1] == 2:  # if user has enough rights
                         try:  # assuming json
                             data = json.loads(self.data)
                             for key, value in data.items():
-                                #GF.log(key + ' val: '+value, "D")
+                                GF.log(key + ' val: '+value, "D")
                                 if value is not None and key != '':
-                                    applySetting(key, value)  # apply setting and put in dictionary
-                                    try:
-                                        sendValueRound(key,settings[key][0],value,self)
-                                    except:
-                                        GF.log("Error in sending the setting round to others" ,'E')
-                                    self.sendClient("OK")
+                                    self.sendClient("OK")  # message is received, so confirm
+                                    applySetting(key, value, self)  # apply setting and put in dictionary
                                 else:
                                     self.sendClient("WARNING: empty request")
                                     GF.log("empty message received",'E')
@@ -434,7 +433,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     connection.remove(user)
                     connectedClients.remove(user)
                 except:
-                    GF.log("Failed to remove user: "+user[2]+" from connected users list", 'E')
+                    GF.log("Failed to remove user: "+user[0]+" from connected users list", 'E')
                 return
 
 
@@ -467,7 +466,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         else:
             self.request.sendall(bytes(message, "utf-8"))
 
-#new code inserted to handle data larger than 125
+    #new code inserted to handle data larger than 125
         # Stolen from http://www.cs.rpi.edu/~goldsd/docs/spring2012-csci4220/websocket-py.txt
     def create_frame(self, data, Opcode=1):
         # first byte, always send an entire message as one frame (fin)
@@ -511,7 +510,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         return message
 
 
-  #receive data from client
+    #receive data from client
     def parse_frame(self):
         s = self.request
         # read the first two bytes
@@ -565,73 +564,28 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         # note big-endian is the standard network byte order
         return int.from_bytes(data, byteorder='big')
 
-
-"""old code
-
-
-    def create_frame(self, data):
-        # pack bytes for sending to client
-        frame_head = bytearray(2)  # 16 bits for header
-
-        # set final fragment
-        frame_head[0] = self.set_bit(frame_head[0], 7)
-
-        # set opcode 1 = text
-        frame_head[0] = self.set_bit(frame_head[0], 0)  # bits 4-7 opcode
-
-        # frame_head[0] == 129 in decimal. 10000001 in bin
-
-        print("head: " + str(bin(frame_head[0])))
-        # payload length
-        l = len(data)
-        #if l < 126:
-        frame_head[1] = len(data)  # bits 9-15 are data (payload) length
-        #elif l >= 126 && l<=
-
-        # add data
-        frame = frame_head + data.encode('utf-8')
-        # print("frame crafted for message " + data + ":")
-        # print(list(hex(b) for b in frame))
-        return frame
-
-
-#def remove_html_tags(data):
-#    p = re.compile(r'<.*?>')
-#   return p.sub('', data)
-"""
-
-# send a value round to all users except the user who send the source message
-def sendValueRound(name, type, value, sender):
-    name = str(name)
-    type = str(type)
-    value = str(value)
-    if value != '' and name != '' and type != '':
-        data = json.dumps({name : ( type, value) })  # { name : [ type, value] }
-        sendRound(data,sender)
-        
 #send data to all connected users, except optionally given sender
-def sendRound(data,sender=False):
+def sendRound(data, sender=False):
     for u in connection:
-        if u[5] != sender:  # don't send back to sender
-            userClass = u[5]
+        userClass = u[5]
+        if userClass != sender and u[0] != 'minute':  # don't send back to sender
             try:
                 GF.log("sendround, sending change: " + data + 'to ' + u[2], "N")
-                if userClass.websocket:
-                    userClass.request.sendall(userClass.create_frame(data))
-                else:
-                    userClass.request.sendall(bytes(data, "utf-8"))
+                userClass.sendClient(data)
             except:
                 GF.log("ERROR: failed to send message to user: "+u[2])
-
     else:
         return False
 def disconnect():
     GF.log("STOP, now closing all sockets", "N")
     for u in connection:
-        Class = u[5]
+        userClass = u[5]
         try:
-            Class.request.sendall(Class.create_frame("stop",8))
-            Class.request.close()
+            if userClass.websocket:
+                userClass.request.sendall(userClass.create_frame("", 8))
+            else:
+                userClass.request.shutdown(1)
+                userClass.request.close()
         except:
             GF.log("ERROR: failed to close socket for user: "+u[0])
 
@@ -678,10 +632,23 @@ if __name__ == "__main__":
             if command == "help":
                 print("Using port 600"
                     "\navailable commands:\n"
-                    "\thelp : this help message"
-                    "\tstop : close sockets")
-            elif command == "stop":
-               disconnect()
+                    "\nhelp : this help message"
+                    "\nclose : close sockets"
+    #                "\nstop : close sockets and stop server"
+                    "\nusers : show users"
+                    "\ncontrols : show all controls"
+                )
+            elif command == "close":
+                disconnect()
+#            elif command == "stop":
+ #               disconnect()
+#                server_thread.shutdown()
+ #               exit()
+            elif command =="users":
+                for u in connectedClients:
+                    print(str(u)+'\n')
+            elif command == "controls":
+                print(str(settings))
         except:
-            GF.log("Exception, now closing all sockets", "E")
+            GF.log("Exception in command, now closing all sockets", "E")
             disconnect()

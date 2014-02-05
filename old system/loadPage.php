@@ -45,11 +45,11 @@ if(isset($_GET['page'])){
 			while($row_pag=$res_pag->fetch_assoc()){//pages
 				if($row_pag['level'] <= $level){
 					if($row_pag['name'] != $pag_nam){
-						$pbt .= '<a class="button pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"> <i class="icon-'.$row_pag['value'].'"></i><span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></a>';
+						$pbt .= ' <button class="button pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"><i class="icon-'.$row_pag['value'].'"></i> <span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></button> ';
 					}
-					else{
-						$pbt = '<a class="button smallButton pag-button" id="'.$pag_nam.'" title="'.$row_pag['desc'].'"> <img src="./images/reload-icon-2.png" /></a>'.$pbt;
-					}
+					/*else{
+						$pbt = ' <button class="button pag-button" id="'.$pag_nam.'" title="'.$row_pag['desc'].'"><img src="./images/reload-icon-2.png" /></button> '.$pbt;
+					}*/
 				}
 				else{
 					//not allowed to view page
@@ -70,7 +70,7 @@ if(isset($_GET['page'])){
 					$cat = $row_cat['desc'];		
 					$Cat = ucfirst($cat);
 					$cnt.='<div class="cat" id="cat'.$i.'"><h3>'.$Cat.'</h3>';//category div and title
-					$cbt .= '<a class="button left cat-button" id="cat'.$i.'link" title="Ga naar '.$Cat.'"> <i class="icon-'.$row_cat['value'].'"></i><span class="catlinktxt">'.$Cat.'</span></a>';//cat buttons
+					$cbt .= ' <button class="button cat-button" id="cat'.$i.'link" title="Ga naar '.$Cat.'"><i class="icon-'.$row_cat['value'].'"></i> <span class="catlinktxt">'.$Cat.'</span></button> ';//cat buttons
 						//subcategories, inside a category there are subcategories, these have a colored heading
 						$qry_sbc = 'select * from '.$table.' where parent=\''.$row_cat['name'].'\' order by vlgrd';
 						if(!$res_sbc = $db_con->query($qry_sbc)){
@@ -96,10 +96,11 @@ if(isset($_GET['page'])){
 											switch($row_opt['type']){
 												case 'tf': //default, true/false
 													//$checked = "";//"($row_opt['value']=='true')?'checked=""':'';
-													$cnt .='<label class="input-control switch">
+									
+													$cnt .='<div class="input-control switch"><label>
 																<input class="input-tf" type="checkbox" id="'.$row_opt['name'].'" />
-																<span class="helper bgColor"><span class="switch-text" id="'.$row_opt['name'].'-txt"></span></span>
-															</label>';
+																<span class="check" id="'.$row_opt['name'].'-txt"></span>
+															</label></div>';
 												break;
 												case 'toggle':
 													$cnt .='<a class="button input-toggle" id="'.$row_opt['name'].'" >Schakel '.$row_opt['desc'].'</a>';
@@ -116,9 +117,8 @@ if(isset($_GET['page'])){
 													while($row_dwn=$res_dwn->fetch_assoc()){//each option
 														$checked = "";//"($row_dwn['name']===$row_opt['value'])?'checked="checked"':'';
 														$cnt .= '
-															<div class="input-control radio default-style margin5" data-role"input-control">
-																<label>
-																	<input type="radio" name="'.$row_opt['name'].'" id="'.$row_dwn['name'].'" data-transform="input-control" />
+															<div class="input-control radio default-style">																<label>
+																	<input type="radio" name="'.$row_opt['name'].'" id="'.$row_dwn['name'].'" />
 																	<span class="check"></span>
 																	'.$row_dwn['desc'].'
 																</label>

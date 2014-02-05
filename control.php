@@ -24,7 +24,6 @@ html{
   	user-select: none;
 	-ms-touch-action: pan-x;
 	-ms-content-zooming: none;
-	-ms-overflow-style: -ms-autohiding-scrollbar;
 }
 body{
 	-ms-scroll-translation: vertical-to-horizontal;
@@ -88,10 +87,10 @@ require 'cons/afdwaka.con';
 if($level >= 0){ //if valid user, init php page
 	echo "<title>JvO Raspberry</title>";
 //colorswatches for choosing color
-	$colors = array('green', 'greenDark', 'greenLight', 'magenta', 'pink', 'pinkDark', 'yellow', 'darken', 'purple', 'teal', 'blue', 'blueDark', 'blueLight', 'orange', 'orangeDark', 'red', 'redLight');
+	$colors = array("black","lime","green","emerald","teal","cyan","cobalt","indigo","violet","pink","magenta","crimson","red","orange","amber","yellow","brown","olive","steel","mauve","taupe","gray","darkMagenta","darkIndigo","darkCyan","darkCobalt","darkTeal","darkEmerald","darkGreen","darkOrange","darkRed","darkPink","darkViolet","darkBlue","lightBlue","lightTeal","lightOlive","lightOrange","lightPink","lightRed","lightGreen");
 	$colorSwatches = '';
 	for($i=0;$i<count($colors);$i++){
-		$colorSwatches .= '<div class="colorSwatch bg-color-'.$colors[$i].'" id="'.$colors[$i].'"></div>';
+		$colorSwatches .= '<div class="colorSwatch bg-'.$colors[$i].'" id="'.$colors[$i].'"></div>';
 	}
 }
 else{
@@ -105,7 +104,6 @@ else{
 	var plugins = [
     'core',
     'touch-handler',
-
     //'accordion',
     'button-set',
     //'date-format',
@@ -158,7 +156,7 @@ $.ajaxSetup({
  $(document).ready(function(){
  	//buildPage('bediening', <?//php //$_GET['page']='bediening'; require_once 'loadPage.php'; ?>); //de eerste pagina die geladen wordt als de website opent.
 	loadPage('bediening');
-	login('<?php echo $usernm; ?>','<?php echo $_SESSION["pwdhash"]; ?>', '<?php echo $_SERVER["HTTP_HOST"]?>', '600')
+	login('<?php echo $usernm; ?>','<?php echo $_SESSION["pwdhash"]; ?>', '<?php echo $_SERVER["HTTP_HOST"]?>', '600')//
 	//setInterval(function(){updateValues()}, 5000) //periodically update the values, every 5 secs now
  }
  );
@@ -251,7 +249,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 						val = test[0]+':'+test[1]; //save with :
 						
 						sendValue(name,val);
-						updateValues();
+						
 					}else{
 						console.log("invalid time");
 						$(this).val('');
@@ -289,16 +287,14 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 	$('.input-dayPicker').change(function(){
 		var id = $(this).attr('id');
 		var name = id.substring(0,id.length-1);
-		val = '{';
+		val = '';
 		for(var i=0;i<7;i++){
 			//console.log(name+i);
 			var checked = $("#"+name+i).prop("checked");
 			//console.log(checked);
-			val += '\"'+i+'\":\"'+checked+'\",';
-		}
-		val = val.substring(0,val.length-1);
-		val += '}';
-		//console.log(name, val);
+			val += checked.toString().substring(0,1);
+			}
+		console.log(name, val);
 		sendValue(name,val);
 	});
 	$(".colorSwatch").click(function(){  //color buttons, update color
@@ -338,11 +334,11 @@ function updateValue(name, type, value){
 			$(find+"-txt").html(value);
 		break;
 		case 'dayPicker':
-			var values = eval('(' + value + ')');
-			for(var i in values){
-				//console.log(name+i, values[i]);
-				tf = (values[i]=="true"?true:false);
-				$(name+i).prop("checked", tf);
+			//console.log(name+'  '+value);
+			for(var i=0;i<7;i++){
+				tf = (value.charAt(i)=="t"?true:false);
+				$(find+i).prop("checked", tf);
+				//console.log(name+'  '+i + ' : ' +tf);
 			}
 		break;
 		case 'value': //text box with value
@@ -380,6 +376,7 @@ function setColor(colorRGB){ //update colors
 	$(".fgColor").css("color",colorRGB); //foreground color
 	$(".bgColor").css("background-color",colorRGB);//general class bgColor
 	$(".noUi-connect").css("background",colorRGB);//slider
+	$(".metro .switch.input-control input[type='checkbox']:checked").css("background-color",colorRGB); //switch control
 }
 
 //set the width of the page such that all categories fit horizontally
@@ -387,11 +384,15 @@ function setWidth(){ //change the widht of items dynamically. Also done in opmaa
 	var w, h, rw;
 	rw = window.innerWidth;
 	w = rw*0.9-20;
-	h = window.innerHeight-220;
-
-	$(".cat").width(w);
-	$(".cat").height(h);
-	$("#cat-page").width(numCat*rw);
+	h = window.innerHeight;
+	$(".cat").height(h-185);
+	if(rw<1000){
+		$(".cat").width(w);
+		$("#cat-page").width(numCat*rw);
+	}else{
+		$(".cat").width(1000);
+		$("#cat-page").width(numCat*1000+1000);
+	}
 }
 
 //function to build the page from a data object containing the content of the page
@@ -441,7 +442,7 @@ function loadPage(page2load){ //load a page from loadPage.php
 
 </script>
 </head>
-<body onResize="setWidth()" class="metrouicss metro">
+<body onResize="setWidth()" class="metro">
 <div id="container">
   <div id="page-buttons"></div>
   <div id="header">
@@ -449,7 +450,7 @@ function loadPage(page2load){ //load a page from loadPage.php
 	<h1>
 	
 		<a href="./index.php" >
-			<i class="icon-arrow-left-3" style="color: black; float:left;"></i>
+			<i class="icon-arrow-left-3 back-button" style="color: black; float:left;"></i>
 		</a>
 		<span id="pagetitle-title"></span> 
 		</h1>
