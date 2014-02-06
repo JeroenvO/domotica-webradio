@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
+__author__ = 'JvO'
 
 #Python Raspberry Pi Domotica
 #Jeroen van Oorschot 2013
-#check whether a alarm should play
-#check sleep timer auto off
+#Functions that run every minute like alarms and timers
+
 import GFunc
-#import db and connect
-# import MySQLdb
+
 import PyDatabase
 #date and time
 import datetime
@@ -83,13 +83,14 @@ def checkReclame():
             if tm == 57:  # time match
                 #change station
                 GF.log("changing radiostation to skip reclame", "N")
-                send("storeData:"+json.dumps({"radiostation":settings["radiostation"][1]}))
-                send(json.dumps({"radiostation":"538nonstop40"}))
+                #send("storeData:"+json.dumps({"radiostation":settings["radiostation"][1]}))
+
+                send(json.dumps({"radiostationTemp": settings["radiostation"][1], "radiostation": "538nonstop40"}))
             elif tm == 6:  # time match
                 #set station back
                 GF.log("changing radiostation back after reclame", "N")
-                send("getData:radiostation")
-                send(json.dumps({"radiostation":sock.recv(100)}))
+                #send("getData:radiostation")
+                send(json.dumps({"radiostation":settings["radiostationTemp"][1]}))
         except:
             GF.log('failed to skip radio reclame','E')
 
@@ -118,7 +119,8 @@ except:
 if answer[0:2] == 'OK':
     #try:
     msg = str(sock.recv(3000), "utf-8")
-    #print('msg: '+msg)
+    print('msg: '+msg)
+
     settings = json.loads(msg)
     db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
     qry = 'UPDATE RPi.settings SET value = CASE name'

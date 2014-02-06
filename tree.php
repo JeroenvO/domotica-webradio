@@ -18,7 +18,7 @@ function getDBLevel($parent){
 	$qry_pag = 'Select * from '.$table.' where parent is NULL order by vlgrd';
 	$res_pag = $db_con->query($qry_pag);
 	while($row_pag=$res_pag->fetch_assoc()){
-		echo "<h1>$res_pag['name']</h1>";
+		echo "<h1>$row_pag['name']</h1>";
 		//getDBLevel($res_pag['name']);
 	}
 ?>

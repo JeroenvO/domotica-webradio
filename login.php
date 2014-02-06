@@ -3,13 +3,13 @@
     { 
         session_start(); 
     } 
-$_SESSION['ID']=NULL;
+//$_SESSION['ID']=NULL;
 $_SESSION['level']=-1;
 $salt = 'asdflaskfjalsdkfj';
 $ip = $_SERVER['REMOTE_ADDR'];
 
 
-if($_GET['log']=='uit'){//logout
+if(isset($_GET['log'])){//logout
 	//destroy session	
 	session_unset();     // unset $_SESSION variable for the run-time 
 	session_destroy();   // destroy session data in storage.
@@ -19,11 +19,10 @@ if($_GET['log']=='uit'){//logout
 }
 else{//login
 //if username/password are given, login with them
-	
 	if(isset($_POST)){
 		require 'cons/afdwaka.con';
 		$usernm = mysql_real_escape_string(strip_tags(strtolower($_POST['gebruikersnaam'])));
-		if($usernm == 'local' || $username == 'localguest')
+		if(isset($usernm) && ($usernm == 'local' || $username == 'localguest')) //don't allow these usernames
 			$usernm = '';
 		$password = md5(mysql_real_escape_string(strip_tags($_POST['wachtwoord'])).$salt);
 		$query = "SELECT pwdhash, level, fullname FROM users WHERE usernm='$usernm'";
@@ -34,7 +33,7 @@ else{//login
 		if($row){
 			if($password == $row['pwdhash'])
 			{
-					$id = $row['ID'];
+					//$id = $row['ID'];
 					$level = $row['level'];
 					$_SESSION['usernm']=$usernm;
 					$_SESSION['IP']=$ip;
@@ -49,7 +48,7 @@ else{//login
 						echo ('Fout in query: '.$db_con->error); 
 						exit();
 					}
-					header("Location: settings.php");
+					header("Location: control.php");
 			}
 			else{//pswd not matchin
 				header('Location: index.php?pswd=error');

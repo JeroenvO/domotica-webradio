@@ -82,7 +82,7 @@
                     </ul>
         		</div>
     			<div id="block3center">
-          			<p><span id="welcomeMsg"></span> <?php echo $fullname; ?>, en welkom!</p>
+          			<p><span id="welcomeMsg"></span> <?php echo isset($fullname)?$fullname:'gast'; ?>, en welkom!</p>
           			<p> <!--Het is <span id="dateMsg"></span> en u-->Uw IP-adres is: <?php echo $_SERVER['REMOTE_ADDR']; ?></p>
                     <p>
 			        <?php 
@@ -107,19 +107,19 @@
 					<br />
 					  	<form action="login.php" method="post">
 					    	<table>
-					      		<tr id="gebruikersnaam" <?php echo $_GET['usrnm']?'class="'.$_GET['usrnm'].'"':'' ?>>
+					      		<tr id="gebruikersnaam" <?php echo isset($_GET['usrnm'])?'class="'.$_GET['usrnm'].'"':'' ?>>
 					        		<td> Gebruikersnaam: </td>
 					        		<td>
 		   								<input type="text" name="gebruikersnaam" data-transform="input-control" />
 									</td>
-	            					<?php echo $_GET['usrnm']?'<td>Onbekende gebruikersnaam</td>':''; ?>
+	            					<?php echo isset($_GET['usrnm'])?'<td>Onbekende gebruikersnaam</td>':''; ?>
 	            				</tr>
-	          					<tr id="wachtwoord" <?php echo $_GET['pswd']?'class="'.$_GET['pswd'].'"':'' ?>>
+	          					<tr id="wachtwoord" <?php echo isset($_GET['pswd'])?'class="'.$_GET['pswd'].'"':'' ?>>
 	            					<td> Wachtwoord: </td>
 	            					<td>
 	       								<input type="password" name="wachtwoord" data-transform="input-control" />
 									</td>
-	            					<?php echo $_GET['pswd']?'<td>Verkeerd wachtwoord</td>':''; ?>
+	            					<?php echo isset($_GET['pswd'])?'<td>Verkeerd wachtwoord</td>':''; ?>
 	            				</tr>
 	        				</table>
 	        				<input type="submit" value="Inloggen" />

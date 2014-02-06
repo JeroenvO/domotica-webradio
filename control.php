@@ -144,7 +144,7 @@ $.each(plugins, function(i, plugin){
 ////////////////////////////////INIT
 
 var numCat; //variable for the number of categories, used give the page the right width
-var usernm = "<?php echo $usernm; ?>";
+var usernm = "<?php echo isset($usernm)?$usernm:''; ?>";
 var page;   //the current page, like 'bediening' 'logboeken'
 var builded=false; //whether there is a page
 //prevent ajax cache, so always the new values are loaded from the server.
@@ -156,7 +156,7 @@ $.ajaxSetup({
  $(document).ready(function(){
  	//buildPage('bediening', <?//php //$_GET['page']='bediening'; require_once 'loadPage.php'; ?>); //de eerste pagina die geladen wordt als de website opent.
 	loadPage('bediening');
-	login('<?php echo $usernm; ?>','<?php echo $_SESSION["pwdhash"]; ?>', '<?php echo $_SERVER["HTTP_HOST"]?>', '600')//
+	login(usernm,'<?php echo isset($_SESSION["pwdhash"])?$_SESSION["pwdhash"]:""; ?>', '<?php echo $_SERVER["HTTP_HOST"]?>', '600')//
 	//setInterval(function(){updateValues()}, 5000) //periodically update the values, every 5 secs now
  }
  );
@@ -210,32 +210,20 @@ function initDateTimePickers(){
 function bindActions(){ //Bind actions to events on buttons, usually call postValue() for database or sendValue for socket connection
 	//navigation functions
 	$(".pag-button").click(function(){  //page buttons
-           var name = $(this).attr('id');
-		   loadPage(name);
+		loadPage($(this).attr('id'));
     });
 	$(".cat-button").click(function(){  //cat buttons
-           var name = $(this).attr('id');
-			var cat = '#'+name.substr(0,4);
-			$.scrollTo($(cat), 800, {margin:true, axis:'x'});
-		   
-		   
-		   
+        var name = $(this).attr('id');
+		$.scrollTo($('#'+name.substr(0,4)), 800, {margin:true, axis:'x'});
     });
 	//$(".input-value").html(""); //clear the text on input-value
-	
-
 	////post functions
-	
+
 	$(".input-tf").click(function() {   //on-off buttons
-			var name = $(this).attr('id');
-			var val = $(this).prop("checked");
-			sendValue(name,val);
-           // window.alert(val);
+			sendValue($(this).attr('id'),$(this).prop("checked"));
 	});									
 	$(".input-toggle").click(function() {//toggle state buttons
-			var name = $(this).attr('id')
-			var val = 'toggle';
-			sendValue(name,val);
+			sendValue($(this).attr('id'),'toggle');
     });									
 	$(".input-time").change(function() {//time input
 			var name = $(this).attr('id')
@@ -247,9 +235,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 						console.log(name, val, test[1], test[1].length);
 						if(test[1].length==1){test[1]='0'+test[1];} //add zeros to minutes
 						val = test[0]+':'+test[1]; //save with :
-						
 						sendValue(name,val);
-						
 					}else{
 						console.log("invalid time");
 						$(this).val('');
@@ -267,8 +253,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 	$(".input-list").change(function() {//radio list items
 			var name =$(this).attr('id'); //id van de hele option
 			var checkedItem = 'input[name='+name+']:radio:checked'; 
-			var val = $(checkedItem).attr('id'); //id of selected element
-			sendValue(name,val);
+			sendValue(name,$(checkedItem).attr('id'));
 			//window.alert(name+' met waarde '+val);
     }); 
 	//sliders are binded via init-slider
@@ -280,13 +265,12 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 			sendValue(name,val);
 			//console.log(event,ui);
 	});*/
-	$('.div-slider').parent().parent().on('touchstart touchmove', function(e){
+	/*$('.div-slider').parent().parent().on('touchstart touchmove', function(e){
 		 //prevent native touch activity like scrolling
 		 e.preventDefault(); 
-	});
+	});/**/
 	$('.input-dayPicker').change(function(){
-		var id = $(this).attr('id');
-		var name = id.substring(0,id.length-1);
+		var name = $(this).attr('id').substring(0,id.length-1);
 		val = '';
 		for(var i=0;i<7;i++){
 			//console.log(name+i);
@@ -294,7 +278,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 			//console.log(checked);
 			val += checked.toString().substring(0,1);
 			}
-		console.log(name, val);
+		//console.log(name, val);
 		sendValue(name,val);
 	});
 	$(".colorSwatch").click(function(){  //color buttons, update color
@@ -309,6 +293,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 
 //////////////////////UPDATE FUNCTIONS
 function updateValue(name, type, value){
+	//console.log('setting: '+name+' to '+value);
     var find = ".input-"+type+'#'+name;
 	//console.log(find);
 	switch(type){
@@ -317,8 +302,8 @@ function updateValue(name, type, value){
             //console.log(find+tf);
 			$(find).prop("checked", tf);
 		break;
-		case 'media': //media controls
-		break;
+		//case 'media': //media controls
+		//break;
 		case 'list': //radio list items
            // window.alert("list, value: "+value);
 			$("input#"+value).prop('checked',true);	
@@ -342,7 +327,7 @@ function updateValue(name, type, value){
 			}
 		break;
 		case 'value': //text box with value
-			$(name).html(value);
+			$(find).html(value);
 		break;
 		default:
 		break;
@@ -351,6 +336,7 @@ function updateValue(name, type, value){
 }
 
 //load updated values from the database, via loadValues.php . For instance if they are changed on another device.
+/*
 function updateValues(){ 
 	$.getJSON('loadValues.php',	 { page: page})
 	.done(function(data){
@@ -367,7 +353,7 @@ function updateValues(){
 		console.log("Failed to load variables from server");
 	});			
 }
-
+*/
 
 ////////////////Page functions
 
@@ -376,7 +362,7 @@ function setColor(colorRGB){ //update colors
 	$(".fgColor").css("color",colorRGB); //foreground color
 	$(".bgColor").css("background-color",colorRGB);//general class bgColor
 	$(".noUi-connect").css("background",colorRGB);//slider
-	$(".metro .switch.input-control input[type='checkbox']:checked").css("background-color",colorRGB); //switch control
+	//$(".metro .switch.input-control input[type='checkbox']:checked").css("background-color",colorRGB); //switch control
 }
 
 //set the width of the page such that all categories fit horizontally
@@ -385,14 +371,14 @@ function setWidth(){ //change the widht of items dynamically. Also done in opmaa
 	rw = window.innerWidth;
 	w = rw*0.9-20;
 	h = window.innerHeight;
-	$(".cat").height(h-185);
-	if(rw<1000){
+	$(".cat").height(h-190);
+	//if(rw<1000){
 		$(".cat").width(w);
 		$("#cat-page").width(numCat*rw);
-	}else{
+	/*}else{
 		$(".cat").width(1000);
 		$("#cat-page").width(numCat*1000+1000);
-	}
+	}*/
 }
 
 //function to build the page from a data object containing the content of the page
@@ -437,9 +423,6 @@ function loadPage(page2load){ //load a page from loadPage.php
 	}
  }
  
-
-
-
 </script>
 </head>
 <body onResize="setWidth()" class="metro">

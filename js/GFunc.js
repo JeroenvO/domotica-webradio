@@ -48,7 +48,7 @@ function login(username, password, server, port){
                 //handle incoming messagesrea
                 try{
                     var values = eval('(' + msg + ')');
-                    //console.log("received message: builded: " + builded);
+                    //console.log("received message: " + values);
                     updateValuesJSON(values);
                 }catch(exception){
                     log("error parsing incoming JSON: " + exception);
@@ -107,7 +107,7 @@ function updateValuesJSON (values){
 		    name = key;
 		    type = values[key][0];
 		    value = values[key][1];
-		    //log("msg received: set " + name + " ("+ type +") to "+ value);
+		    log("msg received: set " + name + " ("+ type +") to "+ value);
 		    updateValue(name, type, value);
 		}
 	}else{

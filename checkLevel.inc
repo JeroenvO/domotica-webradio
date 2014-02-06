@@ -44,5 +44,5 @@ else{ //remote ip
 		$level = -1;
 	}
 }
-
+//echo '<script type="text/javascript">window.alert("level: '.$level.', local: '.$local.', username: '.$usernm.'")</script>';
 ?>

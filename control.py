@@ -1,21 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-
+__author__ = 'JvO'
 #Python Raspberry Pi Domotica
 #Jeroen van Oorschot 2013
-#Server side script to read the mysql db and execute all commands and save logs
-#v 0.9
-#changelog
-#* logging moved to logging.py
-#* alarm moved to alarm.py
-#* using subprocess ipv os
+#Server side script to receive, apply and send changed settings. Uses sockets
+
 
 
 from time import sleep
-import RPi.GPIO as GPIO
+
 import subprocess
 import json
-import argparse
 
 import hashlib
 import base64
@@ -27,8 +22,7 @@ import PyDatabase  # for database
 #for sockets and connections:
 import socketserver
 import threading
-import struct
-import sys
+
 
 connection = []
 connectedClients= []
@@ -66,7 +60,7 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
             if sendTo == 'all':
                 sendRound(data, False)
             elif sendTo != 'none':
-                sendRound(data,sendTo)
+                sendRound(data, sendTo)
         except:
             GF.log("Error in sending the setting round to others" ,'E')
     else:
@@ -120,6 +114,7 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
 def writeUpdates():
     radioText = getRadioText()
     GF.log("radiotext: " + radioText,'N')
+    applySetting('radioText', radioText,'all')  # send radio update to everyone
     #GF.update('radioText', radioText)
 
 
@@ -184,6 +179,8 @@ def playRadio(stream):
     #stop and clear current stream
     subprocess.call(["mpc", "clear"])
     #make playlist
+    if stream[-4:] == '.m3u': #playlist
+        subprocess.call(["mpc", "load", stream])
     subprocess.call(["mpc", "add", stream])
     #play
     resumeRadio()
@@ -205,31 +202,17 @@ def pauseRadio():
 
 #Get radio text, firs line of mpc output, get text from radio, not supported by all stations
 def getRadioText():
-    txt = subprocess.check_output("mpc").split('\n')[0]
-    a = ['volume:','repeat:','random:','single:','consume:']
-    if all(x in txt for x in a):
-        #if the radio is not playing
-        return 'Radio tekst is niet beschikbaar'
-    #otherwise return the radio text
-    return txt
+    txt = str(subprocess.check_output("mpc", universal_newlines=True, stderr=subprocess.STDOUT))
+    if len(txt) > 90:
+        #if the radio is playing
+        return str(txt.split("\n")[0])
+    return 'Radio tekst is niet beschikbaar'
+
 
 #radio functions
 
 
-########GPIO
-
-#initialize all ports
-def setPorts():
-    GPIO.setmode(GPIO.BCM)
-    inputs = [4]
-    outputs = [5, 8, 28]  # get these from db in the future
-    for input in inputs:
-        GPIO.setup(input, GPIO.IN)
-
-    for output in outputs:
-        GPIO.setup(output, GPIO.OUT)
-
-######MAIN
+#####MAIN
 #check instance, quit if already running
 # """
 # file_handle = None
@@ -270,8 +253,8 @@ def initDomo():
     # make settings dict, to use in stead of database
     global settings
     settings = {}
-    global storeData
-    storeData = {}
+    #global storeData
+    #storeData = {}
     # fill settings from the database
     results = db.Select(table='settings', columns=columns, condition_and=condition)
     if results is False:
@@ -315,7 +298,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 GF.log("Incorrect Websocket Upgrade Request from " + str(addr) , 'E')
                 return
         if self.websocket:
-            data = self.parse_frame()
+            data = GF.parse_frame(self)
         loginData = ""
         try:
             loginData = json.loads(str(data, "utf-8"))
@@ -378,7 +361,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
             try:
                 data = ""
                 if self.websocket:
-                    data = self.parse_frame()
+                    data = GF.parse_frame(self)
                 else:
                     data = self.request.recv(1024)
                 self.data = str(data, "utf-8")
@@ -392,17 +375,17 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 if self.data == "close" and not self.websocket: # normal socket wants to close
                     self.shutdown(1)
                     self.close()
-                if self.data.split(":")[0] == 'storeData':  # store some data for some other function
-                    data = json.loads(self.data.split(":")[1])
-                    for key, value in data.items():
+                #if self.data.split(":")[0] == 'storeData':  # store some data for some other function
+                    #data = json.loads(self.data.split(":")[1])
+                    #for key, value in data.items():
                         #GF.log(key + ' val: '+value, "D")
-                        if value is not None and key != '':
-                            storeData[key] = value;
-                if self.data.split(":")[0] == 'getData':  # store some data for some other function
-                    try:
-                        self.sendClient(storeData[self.data.split(":")[1]])
-                    except:
-                        self.sendClient("ERROR, data not available")
+                        #if value is not None and key != '':
+                            #storeData[key] = value;
+                #if self.data.split(":")[0] == 'getData':  # store some data for some other function
+                    #try:
+                     #   self.sendClient(storeData[self.data.split(":")[1]])
+                    #except:
+                     #   self.sendClient("ERROR, data not available")
                 global MAXCHARS
                 if len(self.data) > MAXCHARS:
                     self.sendClient("WARNING: message is too long")
@@ -412,10 +395,12 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     if user[1] == 2:  # if user has enough rights
                         try:  # assuming json
                             data = json.loads(self.data)
+                            print(str(data),str(data.items()))
                             for key, value in data.items():
                                 GF.log(key + ' val: '+value, "D")
                                 if value is not None and key != '':
                                     self.sendClient("OK")  # message is received, so confirm
+                                    print('now going to apply:',value,key)
                                     applySetting(key, value, self)  # apply setting and put in dictionary
                                 else:
                                     self.sendClient("WARNING: empty request")
@@ -462,109 +447,11 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
 
     def sendClient(self, message):
         if self.websocket:
-            self.request.sendall(self.create_frame(message))
+            self.request.sendall(GF.create_frame(message))
         else:
             self.request.sendall(bytes(message, "utf-8"))
 
-    #new code inserted to handle data larger than 125
-        # Stolen from http://www.cs.rpi.edu/~goldsd/docs/spring2012-csci4220/websocket-py.txt
-    def create_frame(self, data, Opcode=1):
-        # first byte, always send an entire message as one frame (fin)
-        b1 = 0x80  # '0b10000000'
 
-        # type of data
-        b1 += Opcode  # if Opcode=1, b1 = '0b10000001'
-
-        # make data
-        if type(data) == str:
-            payload = data.encode("UTF8")
-        elif type(data) == bytes:
-            payload = data
-        else:
-            return 'ERROR, data type not supported'
-
-        # make first byte
-        message = struct.pack(">B", b1)  # chr makes a ascii char from the byte. Sending this is equal to sending the bits
-
-        # b2 starts with zero, because server>client is never masked
-        # make mask and payload-length
-        length = len(payload)
-        if length < 126:
-            b2 = length
-            message += struct.pack(">B",b2)
-        elif length < (2 ** 16) - 1:
-            b2 = 126
-            message += struct.pack(">B",b2)
-            message += struct.pack(">H", length)
-        elif length < (2 ** 64) - 1:
-            b2 = 127
-            message += struct.pack(">B",b2)
-            message += struct.pack(">Q", length)
-        else:
-            return "ERROR, too long message"
-
-        # add the message to the header
-        message += payload
-
-        # Send to the client
-        return message
-
-
-    #receive data from client
-    def parse_frame(self):
-        s = self.request
-        # read the first two bytes
-        frame_head = s.recv(2)
-
-        # very first bit indicates if this is the final fragment
-        # print("final fragment: ", self.is_bit_set(frame_head[0], 7))
-
-        # bits 4-7 are the opcode (0x01 -> text)
-        # print("opcode: ", frame_head[0] & 0x0f)
-
-        # mask bit, from client will ALWAYS be 1
-        assert self.is_bit_set(frame_head[1], 7)
-
-        # length of payload
-        # 7 bits, or 7 bits + 16 bits, or 7 bits + 64 bits
-        payload_length = frame_head[1] & 0x7F
-        if payload_length == 126:
-            raw = s.recv(2)
-            payload_length = self.bytes_to_int(raw)
-        elif payload_length == 127:
-            raw = s.recv(8)
-            payload_length = self.bytes_to_int(raw)
-        # print('Payload is {} bytes'.format(payload_length))
-
-        #masking key
-        #All frames sent from the client to the server are masked by a
-        #32-bit nounce value that is contained within the frame
-
-        masking_key = s.recv(4)
-        # print("mask: ", masking_key, self.bytes_to_int(masking_key))
-
-        # finally get the payload data:
-        masked_data_in = s.recv(payload_length)
-        data = bytearray(payload_length)
-
-        # The ith byte is the XOR of byte i of the data with
-        # masking_key[i % 4]
-        for i, b in enumerate(masked_data_in):
-            data[i] = b ^ masking_key[i%4]
-        return data
-
-    def is_bit_set(self, int_type, offset):
-        mask = 1 << offset
-        return not 0 == (int_type & mask)
-
-    def set_bit(self, int_type, offset):
-        return int_type | (1 << offset)
-
-    def bytes_to_int(self, data):
-        # note big-endian is the standard network byte order
-        return int.from_bytes(data, byteorder='big')
-
-#send data to all connected users, except optionally given sender
 def sendRound(data, sender=False):
     for u in connection:
         userClass = u[5]
@@ -589,27 +476,17 @@ def disconnect():
         except:
             GF.log("ERROR: failed to close socket for user: "+u[0])
 
-#def hash_password(password):
-#    # uuid is used to generate a random number
-#    salt = uuid.uuid4().hex
-#    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
-
-def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
-
+# main init function for tcp server
 ThreadedServerHandler.SendRound = sendRound
 #ThreadedServerHandler.IsAdmin = IsAdmin
 #ThreadedServerHandler.FindUser = FindUser
 #ThreadedServerHandler.hash_password = hash_password
 #ThreadedServerHandler.check_password = check_password
-
-
-# main init function for tcp server
+#send data to all connected users, except optionally given sender
 
 if __name__ == "__main__":
     GF.log("Jeroen van Oorschot, domotica-webradio","N")
-    parser = argparse.ArgumentParser(description='the server component of kolibri chat')
+    #parser = argparse.ArgumentParser(description='the server component of kolibri chat')
     #parser.add_argument('--ip', nargs='?', const=1, type=str, default="localhost", help='specify the ip adress wich the server will bind to, defaults to localhost')
     #parser.add_argument('--port', nargs='?', const=1, type=int, default=6000, help='specify the port number, defaults to 9999')
 
@@ -619,15 +496,22 @@ if __name__ == "__main__":
     GF.log("host: " + str(HOST) + ":" + str(PORT), "N")
     GF.log("starting server ...","N")
     sleep(1)
+
     server = ThreadedTCPServer((HOST, PORT), ThreadedServerHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
     GF.log("Server loop running, waiting for connections ...",'N')
 
-    print("Typ 'help' for available commands")
+    #print("Typ 'help' for available commands")
     while True:
-        command = input()
+        sleep(5)
+        try:
+            writeUpdates()
+        except:
+            print("Error in writeUpdates")
+
+        """command = input()
         try:
             if command == "help":
                 print("Using port 600"
@@ -652,3 +536,4 @@ if __name__ == "__main__":
         except:
             GF.log("Exception in command, now closing all sockets", "E")
             disconnect()
+"""
