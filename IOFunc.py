@@ -14,9 +14,12 @@ import datetime
 import time
 import json
 import socket
-import Adafruit_MCP230XX
-import Adafruit_I2C
+import RPi.GPIO as GPIO
+#import Adafruit_MCP230XX
+#import Adafruit_I2C
 
+#open the db functions and get the database login values
+GF = GFunc.GFunc()
 
 
 class IOFunc():
@@ -36,3 +39,8 @@ class IOFunc():
 
         for output in outputs:
             GPIO.setup(output, GPIO.OUT)
+
+        #set output
+    def setOutput(pin, value):
+        GF.log("tf switch " + pin + " to " + value, 'S')
+        #set gpio

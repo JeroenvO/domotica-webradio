@@ -11,6 +11,7 @@ import datetime
 import struct
 
 
+
 class GFunc():
 
     #read the db login file to get username and password for mysql login
@@ -85,9 +86,8 @@ class GFunc():
 
 
     #receive data from client
-    def parse_frame(self, connectionClass):
-        s = connectionClass.request
-        # read the first two bytes
+    def parse_frame(self,s,masked=True):
+        # read the first two bytes, first contains fin bit and opcode, second contains payload length.
         frame_head = s.recv(2)
 
         # very first bit indicates if this is the final fragment
@@ -96,8 +96,9 @@ class GFunc():
         # bits 4-7 are the opcode (0x01 -> text)
         # print("opcode: ", frame_head[0] & 0x0f)
 
-        # mask bit, from client will ALWAYS be 1
-        assert self.is_bit_set(frame_head[1], 7)
+        # mask bit, from client will ALWAYS be 1, except python client
+        if masked:
+            assert self.is_bit_set(frame_head[1], 7)
 
         # length of payload
         # 7 bits, or 7 bits + 16 bits, or 7 bits + 64 bits
@@ -113,18 +114,24 @@ class GFunc():
         #masking key
         #All frames sent from the client to the server are masked by a
         #32-bit nounce value that is contained within the frame
+        if masked:
+            masking_key = s.recv(4)
+            # print("mask: ", masking_key, self.bytes_to_int(masking_key))
 
-        masking_key = s.recv(4)
-        # print("mask: ", masking_key, self.bytes_to_int(masking_key))
+            #empty bytearray to fill with data
+            data = bytearray(payload_length)
 
         # finally get the payload data:
         masked_data_in = s.recv(payload_length)
-        data = bytearray(payload_length)
 
-        # The ith byte is the XOR of byte i of the data with
-        # masking_key[i % 4]
-        for i, b in enumerate(masked_data_in):
-            data[i] = b ^ masking_key[i%4]
+        if masked:
+            # The ith byte is the XOR of byte i of the data with
+            # masking_key[i % 4]
+            for i, b in enumerate(masked_data_in):
+                data[i] = b ^ masking_key[i%4]
+        else:
+            data = masked_data_in
+
         return data
 
     def is_bit_set(self, int_type, offset):
@@ -143,7 +150,7 @@ class GFunc():
     #    salt = uuid.uuid4().hex
     #    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
 
-    def check_password(hashed_password, user_password):
-        password, salt = hashed_password.split(':')
-        return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+   # def check_password(hashed_password, user_password):
+    #    password, salt = hashed_password.split(':')
+     #   return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
 

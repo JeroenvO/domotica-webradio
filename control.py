@@ -16,6 +16,7 @@ import hashlib
 import base64
 
 import GFunc
+import IOFunc
 
 import PyDatabase  # for database
 
@@ -37,6 +38,7 @@ writeUpdateFactor = 40  # every x updates of checkUpdateTime updates are written
 
 #open the db functions and get the database login values
 GF = GFunc.GFunc()
+IOF = IOFunc.IOFunc()
 
 
 
@@ -55,16 +57,9 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
             # setting not found, so settings is not complete or arguments not correct, assuming first. Re-init and restart now
             GF.log('name of setting: ' + str(name) + ' not found', 'E')
             return False
-        try:
-            data = json.dumps({name : ( tp, value) })  # { name : [ type, value] }
-            if sendTo == 'all':
-                sendRound(data, False)
-            elif sendTo != 'none':
-                sendRound(data, sendTo)
-        except:
-            GF.log("Error in sending the setting round to others" ,'E')
     else:
         GF.log('invalid arguments: [ name: ' + str(name) + ' ; value: ' + str(value) + ' ] supplied to applysetting()', 'E')
+        return False
 
     # read arguments
 
@@ -83,7 +78,7 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
                 value = True
             else:
                 value = False
-            setOutput(pn, value)
+            IOF.setOutput(pn, value)
         except:
             GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
     #drop down list items
@@ -106,6 +101,15 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
     elif tp == "slider":      # slider input
         if name == "volume":    # change volume
             smoothVolume(value)
+    #updat the change to others
+    try:
+        data = json.dumps({name : ( tp, value) })  # { name : [ type, value] }
+        if sendTo == 'all':
+            sendRound(data, False)
+        elif sendTo != 'none':
+            sendRound(data, sendTo)
+    except:
+        GF.log("Error in sending the setting round to others" ,'E')
 
 #def setSetting(name, value, sender=False):
 
@@ -113,17 +117,14 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
 ##write new values to database
 def writeUpdates():
     radioText = getRadioText()
-    GF.log("radiotext: " + radioText,'N')
+    #GF.log("radiotext: " + radioText,'N')
     applySetting('radioText', radioText,'all')  # send radio update to everyone
     #GF.update('radioText', radioText)
 
 
 
-#####GPIO Functions
-#set output
-def setOutput(pin, value):
-    GF.log("tf switch " + pin + " to " + value, 'S')
-    #set gpio
+#####Radio Functions
+
 
 
 #####Sound Functions
@@ -293,12 +294,12 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         if "upgrade: websocket" in str(data, "utf-8").lower():
             try:
                 self.HandShake(str(data, "utf-8"))
-                self.websocket = True
+                self.websocket = 'web'
             except:
                 GF.log("Incorrect Websocket Upgrade Request from " + str(addr) , 'E')
                 return
-        if self.websocket:
-            data = GF.parse_frame(self)
+        if self.websocket == 'web':
+            data = GF.parse_frame(self.request)
         loginData = ""
         try:
             loginData = json.loads(str(data, "utf-8"))
@@ -312,11 +313,17 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         GF.log('User: ' + username + ' trying to login from: ' + str(addr) ,'N')
         #GF.log('addr0-9: ' +addr[0:9], "D" )
         validUser = False
+        print('client addr: '+addr)
         if addr[0:9] == '192.168.1':
             if addr[10:13] in allowedIPs:  # local user
                 user = [username, 2, 'Lokale gebruiker', None, addr, self]
                 validUser = True
                 GF.log('Local user accepted', "N")
+
+                if addr[0:13] == '192.168.1.104':
+                    #print('minute logging in, switching to websocket protocol')
+                    self.websocket = 'python'   # switch to websockets here for minute.py
+
                 self.sendClient("OK, valid login as local user")
             else:
                 user = ['localguest', 1, 'Lokale gast', None, addr, self]
@@ -360,10 +367,10 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         while True:
             try:
                 data = ""
-                if self.websocket:
-                    data = GF.parse_frame(self)
-                else:
-                    data = self.request.recv(1024)
+                if self.websocket == 'web':
+                    data = GF.parse_frame(self.request)
+                elif self.websocket == 'python':
+                    data = GF.parse_frame(self.request, False)  # request from a local python script
                 self.data = str(data, "utf-8")
                 if self.data == "":  # skip if empty data
                     continue
@@ -372,9 +379,9 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     self.sendClient("RESPONSE: Test complete!")
                     GF.log("client "+ str(user[0]) +" requested test response", 'N')
                     continue
-                if self.data == "close" and not self.websocket: # normal socket wants to close
-                    self.shutdown(1)
-                    self.close()
+                #if self.data == "close": # normal socket wants to close
+                #    print("closing socket now")
+                #    self.close()
                 #if self.data.split(":")[0] == 'storeData':  # store some data for some other function
                     #data = json.loads(self.data.split(":")[1])
                     #for key, value in data.items():
@@ -395,16 +402,16 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     if user[1] == 2:  # if user has enough rights
                         try:  # assuming json
                             data = json.loads(self.data)
-                            print(str(data),str(data.items()))
+                            #print(str(data),str(data.items()))
                             for key, value in data.items():
                                 GF.log(key + ' val: '+value, "D")
                                 if value is not None and key != '':
-                                    self.sendClient("OK")  # message is received, so confirm
-                                    print('now going to apply:',value,key)
+                                    #print('now going to apply:',value,key)
                                     applySetting(key, value, self)  # apply setting and put in dictionary
                                 else:
                                     self.sendClient("WARNING: empty request")
                                     GF.log("empty message received",'E')
+                            self.sendClient("OK")  # message is received, so confirm
                         except:  # wrong assumption
                             GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
                             self.sendClient("WARNING: Not a command or invalid name or type")
@@ -446,6 +453,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         self.request.send(bytes(handshake, "utf-8"))
 
     def sendClient(self, message):
+        #print('sending: '+message)
         if self.websocket:
             self.request.sendall(GF.create_frame(message))
         else:

@@ -41,6 +41,8 @@ body{
 <script src="./js/jquery-ui-1.10.3.custom.js"></script>
 <!--JS scrollto-->
 <script src="./js/scrollto.js"></script>
+<!-- my JS functions for sending and receiving -->
+<script src="./js/GFunc.js"></script>
 <!--jquery datebox
 <link href="./css/jqm-datebox.css" type="text/css" rel="stylesheet" />
 <link href="./css/jquery.mobile.datebox.css" type="text/css" rel="stylesheet" />

@@ -270,8 +270,9 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 		 e.preventDefault(); 
 	});/**/
 	$('.input-dayPicker').change(function(){
-		var name = $(this).attr('id').substring(0,id.length-1);
-		val = '';
+		var name = $(this).attr('id')
+		name = name.substring(0,name.length-1);
+		var val = '';
 		for(var i=0;i<7;i++){
 			//console.log(name+i);
 			var checked = $("#"+name+i).prop("checked");

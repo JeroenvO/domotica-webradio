@@ -67,7 +67,7 @@ def checkUpdates(firstTime):
         if results is False:
             GF.log("could not execute query: " + db.query,'E')
 
-    lastCheck = str(int(GF.time10())-2*checkUpdateTime)
+    lastCheck = str(int(GF.time10())-0*checkUpdateTime)
 
     if results is not None:
         # apply all changes
@@ -203,7 +203,7 @@ def resumeRadio():
 def pauseRadio():
     GF.log("mpc paused", 'S')
     #pause radio
-    subprocess.call(["mpc", "clear"])
+    subprocess.call(["mpc", "stop"])
 
 
 #Get radio text, firs line of mpc output, get text from radio, not supported by all stations

@@ -12,6 +12,7 @@ import PyDatabase
 #date and time
 import datetime
 import time
+from time import sleep
 import json
 import socket
 
@@ -24,6 +25,7 @@ GF = GFunc.GFunc()
 def startAlarm(alarmNum,):
     #start alarm
     GF.log("Alarm " + str(alarmNum) + " turning on now", 'N')
+    #print(json.dumps({'volume' : str( settings['a' + alarmNum + '_alarmVol'][1] ), 'geluidbron' : 'Raspberry'}))
     send(json.dumps({'volume' : str( settings['a' + alarmNum + '_alarmVol'][1] ), 'geluidbron' : 'Raspberry'}))
 
 
@@ -34,17 +36,18 @@ def checkAlarms():
         #print(alarmNum)
         if settings['a' + alarmNum + '_alarmOn'][1] == 'true':
             at = settings['a' + alarmNum + '_alarmTime'][1].split(':')
-            GF.log('alarm ' + alarmNum + ' is being checked'+str(at), "D")
+           #GF.log('alarm ' + alarmNum + ' is being checked'+str(at), "D")
             if int(at[0]) == th and int(at[1]) == tm:  # time match, alarm should ring now
                 alarmDays = settings['a' + alarmNum + '_alarmDays'][1]
+                GF.log("Alarm "+str(alarmNum) + " now starting")
                 # check if it is an one-time alarm, meaning no repeating days are selected
                 if alarmDays == 'fffffff':   # everything false oneTimeAlarm = True
-                    try:
-                        send(json.dumps({'a' + str(alarmNum) + '_alarmOn' : 'false'}))
-                        GF.log('one time alarm ' + str(alarmNum) + ' turned off', 'N')
-                        startAlarm(alarmNum)
-                    except:
-                        GF.log('unable to ring alarm ' + str(alarmNum), 'E')
+                    #try:
+                    send(json.dumps({'a' + str(alarmNum) + '_alarmOn' : 'false'}))
+                    GF.log('one time alarm ' + str(alarmNum) + ' turned off', 'N')
+                    startAlarm(alarmNum)
+                   # except:
+                    #    GF.log('unable to ring alarm ' + str(alarmNum), 'E')
                 else: # oneTimeAlarm = False
                     day = datetime.datetime.today().weekday()  # match days
                     # print('day: ' + str(day) + ' on this day: ' + str(ontThisDay) )
@@ -73,10 +76,7 @@ def checkAutoOff():
             # GF.send('soundSleepTimer', 'uit')
             send(json.dumps({"soundSleepTimer":'uit'}))
 
-# send data to server
-def send(data):
-    sock.sendall(bytes(str(data+'\n'), "utf-8"))
-
+#check whether to change radiostation to skip the adds
 def checkReclame():
     if settings['geluidbron'][1] == 'Raspberry' and settings['skipAds'][1] == 'true': #radio is on
         try:
@@ -95,31 +95,52 @@ def checkReclame():
             GF.log('failed to skip radio reclame','E')
 
 #####MAIN
+
+
+# send data to server
+def send(message):
+    sleep(1)  # wait some time to prevent sending too fast
+    sock.sendall(GF.create_frame(message))
+    sleep(4)  # give server time to send response
+    rec = str(GF.parse_frame(sock,False), "utf-8")
+    #print(rec)
+    if rec  == 'OK':
+        #print('message is received by server')
+        return True
+    else:
+        GF.log('Server did not receive message, now trying again','E')
+        sleep(1)
+        send(message)
+
 try:
     sock.connect(('192.168.1.104', 600))
 except:
-    print("connection failed")
+    GF.log("Failed to connect to server","E")
     sock.close()
     exit()
 
-#GF.log("Connected! Logging in to system ...", "D" )
 time.sleep(0.5)
 loginData = {
     "username": "minute",
     "password": "",
 }
+
+#send login info without websocket protocol
 try:
     sock.sendall(bytes(json.dumps(loginData), "utf-8"))
-    answer = str(sock.recv(100), "utf-8")
+    sleep(1)
+    data = GF.parse_frame(sock, False)
+    answer = str(data, "utf-8")
 except:
     print("server disconnected during login communication")
     sock.close()
     exit()
 
 if answer[0:2] == 'OK':
-    #try:
-    msg = str(sock.recv(3000), "utf-8")
-    print('msg: '+msg)
+    sleep(1)
+    #switch to websocket protocol from now on
+    msg = str(GF.parse_frame(sock,False), "utf-8")  # str(sock.recv(3000), "utf-8")
+    GF.log('data: '+msg, "N")  # print all data that is going to be written to db
 
     settings = json.loads(msg)
     db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
@@ -132,11 +153,10 @@ if answer[0:2] == 'OK':
     results = db.Execute(qry)
     if results is False:
         GF.log("failed to execute query: " + db.query, 'E')
-    GF.log("Database updated","N")
+    #GF.log("Database updated","N")
 
     th = time.localtime()[3]
     tm = time.localtime()[4]
-
     #try:
     checkAlarms()
     #except:
@@ -151,8 +171,8 @@ if answer[0:2] == 'OK':
         print('reclame error')
     #print('finished')
     #print('closing:')
-    sock.sendall(bytes("close", "utf-8"))
-    sock.shutdown(1)
+    #send("close")
+    #sock.shutdown(1)
     sock.close()
     time.sleep(2)
 else:

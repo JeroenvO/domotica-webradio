@@ -1,16 +1,14 @@
 Jeroen van Oorschot 2013
 
-domo.py is the file that runs continuously to check for changed settings. It is mostly used to play radio.
-alarm.py is called every minute by crontab to check if any clock related setting should change
+control.py is the file that runs continuously to check for changed settings. It is mostly used to play radio. It is also a websocket server
+minute.py is called every minute by crontab to check if any clock related setting should change, if anything should change it sends this with sockets to control.py. This file also keeps the database up to date
 logging.py is called every half hour to log measured values
 
 index.php is the landing page for any user
-settings.php is the page where settings can be changed, or loggings can be read
+control.php is the page where settings can be changed, or loggings can be read. It communicates using websockets with control.py
 loadPage.php loads and builds a whole page from the database and sends the html as json string to settings.php
-loadValues.php gets all the values of the settings from the database and sends them to settings.php to keep the values there up to date
 
 login.php is used to create a session for a remote user, local users are automatically allowed
 checkLevel.inc checks if a session or users is still valid
 color.inc reads the users preffered color from the database
 
-tree.php shows the database structure

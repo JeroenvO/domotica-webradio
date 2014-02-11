@@ -18,6 +18,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 
 		<script type="text/javascript" src="./js/jquery-2.0.3.min.js"></script>
+		<script type="text/javascript" src="./js/jquery.widget.min.js"></script><!--also for metro ui-->
 		<script type="text/javascript" src="./js/metro-input-control.js"></script>
 		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
 		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
