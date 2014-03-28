@@ -14,7 +14,8 @@ import json
 
 import hashlib
 import base64
-
+#import sys
+import wiringpi2
 import GFunc
 import IOFunc
 
@@ -23,13 +24,17 @@ import PyDatabase  # for database
 #for sockets and connections:
 import socketserver
 import threading
+#import sys
+#print(sys.path)
 
+print("Starting in 5 seconds...")
+sleep(5)
 
 connection = []
 connectedClients= []
 #bannedips = []
-MAXCHARS = 124
-allowedIPs = ['100','101','102','103','104']
+#MAXCHARS = 124
+allowedIPs = ['101','102','103','104']
 
 #####
 #some constants
@@ -118,7 +123,8 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
 def writeUpdates():
     radioText = getRadioText()
     #GF.log("radiotext: " + radioText,'N')
-    applySetting('radioText', radioText,'all')  # send radio update to everyone
+    if radioText != settings['radioText'][1]:
+        applySetting('radioText', radioText, 'all')  # send radio update to everyone
     #GF.update('radioText', radioText)
 
 
@@ -132,7 +138,7 @@ def writeUpdates():
 def switchSound(channel):
     GF.log("change soundinput to " + channel, 'S')
     #switch the amplifier input to channel
-    #some gpio actions
+    IOF.setSoundInput(int(channel))
 
 
 ##radio functions
@@ -192,6 +198,8 @@ def resumeRadio():
     GF.log("mpc resumed", 'S')
     #play list
     subprocess.call(["mpc", "play"])
+    radioText = getRadioText()
+    applySetting('radioText', radioText,'all')  # send radio update to everyone
 
 
 #pause the radio
@@ -393,31 +401,32 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                      #   self.sendClient(storeData[self.data.split(":")[1]])
                     #except:
                      #   self.sendClient("ERROR, data not available")
-                global MAXCHARS
-                if len(self.data) > MAXCHARS:
-                    self.sendClient("WARNING: message is too long")
-                    GF.log("client " + str(user[0]) + " tried sending a too long message")
-                else: # normal data received. Not a command
+                #global MAXCHARS
+                #if len(self.data) > MAXCHARS:
+                    #self.sendClient("WARNING: message is too long")
+                    #GF.log("client " + str(user[0]) + " tried sending a too long message")
+                #else: # normal data received. Not a command
                     #self.sendClient("OK")  # send receive confirmation
-                    if user[1] == 2:  # if user has enough rights
-                        try:  # assuming json
-                            data = json.loads(self.data)
-                            #print(str(data),str(data.items()))
-                            for key, value in data.items():
-                                GF.log(key + ' val: '+value, "D")
-                                if value is not None and key != '':
-                                    #print('now going to apply:',value,key)
-                                    applySetting(key, value, self)  # apply setting and put in dictionary
-                                else:
-                                    self.sendClient("WARNING: empty request")
-                                    GF.log("empty message received",'E')
-                            self.sendClient("OK")  # message is received, so confirm
-                        except:  # wrong assumption
-                            GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
-                            self.sendClient("WARNING: Not a command or invalid name or type")
-                    else:
-                        GF.log('User '+user[0]+' tried to send but has not enough rights','U')
-                        self.sendClient("WARNING: Not enough rights for this action")
+                if user[1] == 2:  # if user has enough rights
+                    try:  # assuming json
+                        data = json.loads(self.data)
+                        #print(str(data),str(data.items()))
+                        for key, value in data.items():
+                            GF.log(key + ' val: '+value, "D")
+                            if value is not None and key != '':
+                                self.sendClient("OK")  # message is received, so confirm
+                                #print('now going to apply:',value,key)
+                                applySetting(key, value, self)  # apply setting and put in dictionary
+                            else:
+                                self.sendClient("WARNING: empty request")
+                                GF.log("empty message received",'E')
+
+                    except:  # wrong assumption
+                        GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
+                        self.sendClient("WARNING: Not a command or invalid name or type")
+                else:
+                    GF.log('User '+user[0]+' tried to send but has not enough rights','U')
+                    self.sendClient("WARNING: Not enough rights for this action")
 
             except:
                 GF.log("INFO: client "+username+" from "+addr+" disconnected",'N')
