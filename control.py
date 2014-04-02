@@ -312,7 +312,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         try:
             loginData = json.loads(str(data, "utf-8"))
         except:
-            self.sendClient("ERROR: wrong format login package")
+            self.sendClient("E: wrong format login package")
             GF.log("ERROR: client from "+str(addr)+" sent wrong loginrequest: " + str(loginData))
             return
 
@@ -359,11 +359,11 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 GF.log('OK, valid login as remote user',"N")
             else:
                 GF.log('This is an invalid user, stopping now', 'N')
-                self.sendClient("ERROR invalid user or password send. Stopping connection now")
+                self.sendClient("E: invalid user or password send. Stopping connection now")
                 return False
         else:  # not valid user
             GF.log('This is an empty request, stopping now', 'N')
-            self.sendClient("ERROR username and password empty. Stopping connection now")
+            self.sendClient("E: username and password empty. Stopping connection now")
             return False
 
         connection.append(user)
@@ -384,29 +384,14 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     continue
                 GF.log("user "+str(user[0])+" send message: "+self.data, 'N')
                 if self.data == "testresponse":
-                    self.sendClient("RESPONSE: Test complete!")
+                    self.sendClient("R: Test complete!")
                     GF.log("client "+ str(user[0]) +" requested test response", 'N')
                     continue
-                #if self.data == "close": # normal socket wants to close
-                #    print("closing socket now")
-                #    self.close()
-                #if self.data.split(":")[0] == 'storeData':  # store some data for some other function
-                    #data = json.loads(self.data.split(":")[1])
-                    #for key, value in data.items():
-                        #GF.log(key + ' val: '+value, "D")
-                        #if value is not None and key != '':
-                            #storeData[key] = value;
-                #if self.data.split(":")[0] == 'getData':  # store some data for some other function
-                    #try:
-                     #   self.sendClient(storeData[self.data.split(":")[1]])
-                    #except:
-                     #   self.sendClient("ERROR, data not available")
-                #global MAXCHARS
-                #if len(self.data) > MAXCHARS:
-                    #self.sendClient("WARNING: message is too long")
-                    #GF.log("client " + str(user[0]) + " tried sending a too long message")
-                #else: # normal data received. Not a command
-                    #self.sendClient("OK")  # send receive confirmation
+                #resend all values
+                if self.data == "resendValues" and user[1] ==2:
+                    GF.log("client "+ str(user[0]) +" requested value update", 'N')
+                    self.sendClient(json.dumps(settings))
+                    continue;
                 if user[1] == 2:  # if user has enough rights
                     try:  # assuming json
                         data = json.loads(self.data)
@@ -418,15 +403,15 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                                 #print('now going to apply:',value,key)
                                 applySetting(key, value, self)  # apply setting and put in dictionary
                             else:
-                                self.sendClient("WARNING: empty request")
+                                self.sendClient("W: empty request")
                                 GF.log("empty message received",'E')
 
                     except:  # wrong assumption
                         GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
-                        self.sendClient("WARNING: Not a command or invalid name or type")
+                        self.sendClient("W: Not a command or invalid name or type")
                 else:
                     GF.log('User '+user[0]+' tried to send but has not enough rights','U')
-                    self.sendClient("WARNING: Not enough rights for this action")
+                    self.sendClient("W: Not enough rights for this action")
 
             except:
                 GF.log("INFO: client "+username+" from "+addr+" disconnected",'N')

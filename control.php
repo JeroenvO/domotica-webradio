@@ -402,6 +402,10 @@ function buildPage(page2load, data){
 	//updateValues(); //set values for all controls that arent set automatically in loadPage
 	console.log('page ' + page2load + ' builded');
 	builded = true;
+	
+	if(page2load == 'bediening'){
+		loadValues();
+	}
 }
 
 //load the data of a page asynchronous from loadPage.php.
@@ -423,6 +427,24 @@ function loadPage(page2load){ //load a page from loadPage.php
 		$("#container").html('<div class="error-bar">Je bent niet ingelogd. <a href="index.php" title="niet ingelogd">Klik hier om in te loggen</a></div>'); //show error bar
 	}
  }
+ 
+ //post a changed setting to the server
+function sendValue(name,value)
+{      
+    if(SOCKET.readyState == 1){
+        var data = '{"'+name+'":"'+value+'"}';
+        log("sending: " + data);
+        STATE = 2;
+        SOCKET.send(data);  
+    }else{
+        log('Socket Status: ' + SOCKET.readyState+' (Closed)');
+        //alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')
+		if(confirm("De verbinding is verloren, opnieuw proberen?")){
+			login(usernm,'<?php echo isset($_SESSION["pwdhash"])?$_SESSION["pwdhash"]:""; ?>', '<?php echo $_SERVER["HTTP_HOST"]?>', '600')//
+		}
+        STATE = 1;
+    }     
+}
  
 </script>
 </head>

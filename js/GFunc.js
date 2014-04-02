@@ -18,7 +18,11 @@ $(document).ready(function(){
 function log(msg){
         console.log('websockets: ' + msg.toString())
 }
-
+//request a refresh of the settings
+function loadValues(){
+	SOCKET.send("resendValues");
+	STATE =1;
+}
 //log in to the socketserver
 function login(username, password, server, port){
     var host = "ws://" + server + ':' + port;
@@ -41,7 +45,7 @@ function login(username, password, server, port){
         
         SOCKET.onmessage = function(event){
             msg = event.data;
-            //log("state: " + STATE + "; message received: " + msg )
+            log("state: " + STATE + "; message received: " + msg )
             switch(STATE)
             {
             case 1:
@@ -64,16 +68,16 @@ function login(username, password, server, port){
                     //if message has a :, it contains a message back from the server. if not is is invalid
                     msg = msg.split(':');
                     switch(msg[0]){
-                        case "ERROR":
+                        case "E": //error
 							alert("Something went wrong in the server: "+msg[1]+"\nNow going back to login");
 							window.location = "/login.php?log=uit";
                             //back to loginpage
                         break;
-                        case "WARNING":
+                        case "W": //warning
                             alert("The operation you tried is not permitted, nothing happened.\nReason: ");
                             //do nothing
-                        break;
-                        case "RESPONSE":
+                        break; 
+                        case "R": //response
                             log("The server send a message back: ");
                             //do something with the received data
                         break;
@@ -90,7 +94,10 @@ function login(username, password, server, port){
         
         SOCKET.onclose = function(){
             log('Socket Status: ' + SOCKET.readyState+' (Closed)');
-            alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')
+            //alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')
+			if(confirm("De verbinding is verloren, opnieuw proberen?")){
+				login(username, password, server, port);
+			}
             STATE = 1;
         }
         SOCKET.onerror = function(){
@@ -114,21 +121,6 @@ function updateValuesJSON (values){
 		setTimeout(function(){updateValuesJSON(values)},200);
 	}
 	
-}
-
-//post a changed setting to the server
-function sendValue(name,value)
-{      
-    if(SOCKET.readyState == 1){
-        var data = '{"'+name+'":"'+value+'"}';
-        log("sending: " + data);
-        STATE = 2;
-        SOCKET.send(data);  
-    }else{
-        log('Socket Status: ' + SOCKET.readyState+' (Closed)');
-        alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')
-        STATE = 1;
-    }     
 }
 
 //post a value asynchronous via doUpdate.php to the database

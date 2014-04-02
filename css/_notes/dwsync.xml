@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="modern-responsive.css" server="www.vanoorschot.biz/webspace/httpdocs/" local="130179251083857480" remote="130185587400000000" Dst="2" />
-<file name="modern.css" server="www.vanoorschot.biz/webspace/httpdocs/" local="130187386085834249" remote="130187313600000000" Dst="2" />
 <file name="theme-dark.css" server="www.vanoorschot.biz/webspace/httpdocs/" local="130179251084467892" remote="130185587400000000" Dst="2" />
 <file name="jquery-ui-1.10.3.custom.css" server="www.vanoorschot.biz/webspace/httpdocs/" local="130194958016053530" remote="130194885600000000" Dst="2" />
-<file name="jquery-ui-1.10.3.custom.css" server="192.168.1.104//var/www/" local="130194958016053530" remote="130231485600000000" Dst="2" />
-<file name="modern-responsive.css" server="192.168.1.104//var/www/" local="130179251083857480" remote="130231485600000000" Dst="2" />
-<file name="theme-dark.css" server="192.168.1.104//var/www/" local="130179251084467892" remote="130231485600000000" Dst="2" />
-<file name="modern.css" server="192.168.1.104//var/www/" local="130231522262151511" remote="130235697600000000" Dst="2" />
-<file name="opmaak.css" server="192.168.1.104//var/www/" local="130244931703226810" remote="130244931600000000" Dst="2" />
+<file name="jquery-ui-1.10.3.custom.css" server="192.168.1.104//var/www/" local="130194958016053530" remote="130408956000000000" Dst="2" />
+<file name="theme-dark.css" server="192.168.1.104//var/www/" local="130179251084467892" remote="130408956000000000" Dst="2" />
+<file name="opmaak.css" server="192.168.1.104//var/www/" local="130361651669892317" remote="130408956000000000" Dst="2" />
 <file name="wp_icons.png" server="192.168.1.104//var/www/" local="130247021602375699" remote="130247028000000000" Dst="2" />
 <file name="wp_icons_light.png" server="192.168.1.104//var/www/" local="130247021602454521" remote="130247028000000000" Dst="2" />
-<file name="mobiscroll.custom-2.6.2.min.css" server="192.168.1.104//var/www/" local="130247021602283726" remote="130247028000000000" Dst="2" />
+<file name="sltime.css" server="192.168.1.104//var/www/" local="130309204214397914" remote="130408956000000000" Dst="2" />
+<file name="jquery.nouislider.modern.css" server="192.168.1.104//var/www/" local="130359151184848561" remote="130408959000000000" Dst="2" />
+<file name="metro-bootstrap.css" server="192.168.1.104//var/www/" local="130357661456782970" remote="130408959000000000" Dst="2" />
 </dwsync>
