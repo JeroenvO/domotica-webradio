@@ -22,20 +22,35 @@ OUTPUT = 1
 INPUT = 0
 PB1 = 64  # pinbase for first (audio and display) expander
 PB2 = 16+PB1 #pinbase for relay control expander
-OUTPUT_PINS = [64,65, 69,70,71,72,73,74,75,76,77,78,79]
-INPUT_PINS = [66,67,68]
+OUTPUT_PINS_1 = [64,65, 69,70,71,72,73,74,75,76,77,78,79]
+INPUT_PINS_1 = [66,67,68]
+
+OUTPUT_PINS_2 = [80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95]
+INPUT_PINS_2 = []
 class IOFunc():
 
     #initialise all IO
     def __init__(self):
         wp.wiringPiSetup()
+
+        #left 23017, for audio
         wp.mcp23017Setup( PB1,0x20)
-        for pin in OUTPUT_PINS:
+        for pin in OUTPUT_PINS_1:
             wp.pinMode(pin,OUTPUT)
-        for pin in INPUT_PINS:
-            wp.pinMode(66, INPUT)
+        for pin in INPUT_PINS_1:
+            wp.pinMode(pin, INPUT)
+
+        #right 23017 for 230v switching
+        wp.mcp23017Setup( PB2,0x21)
+        for pin in OUTPUT_PINS_2:
+            wp.pinMode(pin,OUTPUT)
+        for pin in INPUT_PINS_2:
+            wp.pinMode(pin, INPUT)
+
+        #display
+
       #  wp.lcdInit(2, 16, 8, rs, strb, d0, d1, d2, d3, d4, d5, d6, d7)
-    ########GPIO
+
 
     def setSoundInput(self, channel):
         if channel > 3 or channel < 0:
@@ -54,17 +69,16 @@ class IOFunc():
         wp.digitalWrite(PB1+0, bit1)
         wp.digitalWrite(PB1+1, bit0)
 
-    #initialize all ports
-    def setPorts(self):
-        inputs = [4]
-        outputs = [5, 8, 28]  # get these from db in the future
-        for input in inputs:
-            GPIO.setup(input, GPIO.IN)
-
-        for output in outputs:
-            GPIO.setup(output, GPIO.OUT)
 
         #set output
     def setOutput(self, pin, value):
-        GF.log("tf switch " + str(pin) + " to " + str(value), 'S')
-        #set gpio
+        if(value == 1 or value == 0):
+            GF.log("tf switch " + str(pin) + " to " + str(value), 'S')
+            #set gpio
+            try:
+
+                wp.digitalWrite(pin, value)
+            except:
+                GF.log("Error in writing output pin");
+        else:
+            GF.log("Invalid value")

@@ -35,7 +35,7 @@ connectedClients= []
 #bannedips = []
 #MAXCHARS = 124
 allowedIPs = ['101','102','103','104']
-
+allowedComs = ["poweroff", "reboot"]
 #####
 #some constants
 checkUpdateTime = 0.1   # every x seconds the database is checked for updates
@@ -71,18 +71,19 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
     xt = settings[name][2]  # str(row[3])  # extra info, pin nr
     value = str(value)
     GF.log('applySetting setting "'+name+'" to "' +value+'"','N')
-    # toggling button
-    #if tp == "toggle":
-        #do something
+
+    if tp == "button": #execute a command
+        if sendTo != 'none': #don't do this on the init. Only if it comes from a user
+            command(name)
     # true-false switch for a port
-    if tp == "tf" and xt is not None and xt.isdigit():
+    elif tp == "tf" and xt is not None and xt.isdigit():
         try:
             pn = int(xt)  # pin
             #value should be 'True' or 'False'
             if value == "true":
-                value = True
+                value = 1
             else:
-                value = False
+                value = 0
             IOF.setOutput(pn, value)
         except:
             GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
@@ -128,7 +129,15 @@ def writeUpdates():
     #GF.update('radioText', radioText)
 
 
-
+def command(com):
+    if(com in allowedComs):
+        GF.log("Executing command: " + str(com), 'N')
+        try:
+            subprocess.call(["sudo", com])
+        except:
+            GF.log("Unable to execute command", 'E')
+    else:
+        GF.log("Command not allowed", 'N')
 #####Radio Functions
 
 
@@ -198,6 +207,7 @@ def resumeRadio():
     GF.log("mpc resumed", 'S')
     #play list
     subprocess.call(["mpc", "play"])
+    sleep(0.1)
     radioText = getRadioText()
     applySetting('radioText', radioText,'all')  # send radio update to everyone
 
@@ -211,11 +221,15 @@ def pauseRadio():
 
 #Get radio text, firs line of mpc output, get text from radio, not supported by all stations
 def getRadioText():
-    txt = str(subprocess.check_output("mpc", universal_newlines=True, stderr=subprocess.STDOUT))
-    if len(txt) > 90:
-        #if the radio is playing
-        return str(txt.split("\n")[0])
-    return 'Radio tekst is niet beschikbaar'
+    try:
+        txt = str(subprocess.check_output("mpc", universal_newlines=True, stderr=subprocess.STDOUT))
+        if len(txt) > 90:   #if the radio is playing
+            return str(txt.split("\n")[0])
+        else:
+            return 'Radio tekst is niet beschikbaar'
+    except:
+        return "MPC is niet beschibaar"
+
 
 
 #radio functions
@@ -392,6 +406,24 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     GF.log("client "+ str(user[0]) +" requested value update", 'N')
                     self.sendClient(json.dumps(settings))
                     continue;
+               # ... if self.data == "shutdown" and user[1] ==2:
+               #      GF.log("client "+ str(user[0]) +" requested shutdown", 'N')
+               #      try:
+               #          self.sendClient("R: Raspberry shutdown")
+               #          subprocess.call(["sudo", "poweroff"])
+               #      except:
+               #          GF.log("shutdown failed",'E')
+               #          self.sendClient("R: shutdown failed")
+               #      continue;
+               #  if self.data == "reboot" and user[1] ==2:
+               #      GF.log("client "+ str(user[0]) +" requested reboot", 'N')
+               #      try:
+               #          self.sendClient("R: Raspberry reboot")
+               #          subprocess.call(["sudo", "reboot"])
+               #      except:
+               #          GF.log("reboot failed",'E')
+               #          self.sendClient("R: reboot failed")
+               #      continue;...
                 if user[1] == 2:  # if user has enough rights
                     try:  # assuming json
                         data = json.loads(self.data)
