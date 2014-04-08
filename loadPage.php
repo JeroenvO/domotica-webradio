@@ -102,8 +102,8 @@ if(isset($_GET['page'])){
 																<span class="check" id="'.$row_opt['name'].'-txt"></span>
 															</label></div>';
 												break;
-												case 'toggle':
-													$cnt .='<a class="button input-toggle" id="'.$row_opt['name'].'" >Schakel '.$row_opt['desc'].'</a>';
+												case 'button':
+													$cnt .='<a class="button input-button" id="'.$row_opt['name'].'" >'.$row_opt['desc'].'</a>';
 												break;
 												case 'media': //media controls
 												break;

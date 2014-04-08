@@ -28,6 +28,7 @@ html{
 body{
 	-ms-scroll-translation: vertical-to-horizontal;
 }
+
 </style>
 
 <!--Jquery:-->
@@ -47,38 +48,9 @@ body{
 	<script src="./js/scrollto.js"></script>
 <!-- my JS functions for sending and receiving -->
 	<script src="./js/GFunc.js"></script>
-<!--jquery datebox
-	<link href="./css/jqm-datebox.css" type="text/css" rel="stylesheet" />
-	<link href="./css/jquery.mobile.datebox.css" type="text/css" rel="stylesheet" />
--->
 
-<!-- metro ui-->
-	<!--<link href="./css/modern.css" type="text/css" rel="stylesheet" /> 
-	<link href="./css/modern-responsive.css" type="text/css" rel="stylesheet" />  -->
 	<link href="./css/metro-bootstrap.css" type="text/css" rel="stylesheet" />
-<!--jquery timepicker circle 
-    <link rel="stylesheet" type="text/css" href="css/sltime.css" media="screen" />
-     
-    <script type="text/javascript" src="js/jquery.sltime.min.js"></script>
-    <script type="text/javascript" src="js/jquery.event.drag-1.5.min.js"></script>-->
-	
-<!--<script type="text/javascript" src="./js/assets/jquery.mousewheel.min.js"></script>
-<script type="text/javascript" src="./js/assets/moment.js"></script>
-<script type="text/javascript" src="./js/assets/moment_langs.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/dropdown.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/accordion.js"></script>
-<script type="text/javascript" src="./js/metro-button-set.js"></script>
-<script type="text/javascript" src="./js/metro-touch-handler.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/carousel.js"></script>
-<script type="text/javascript" src="./js/metro-input-control.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/pagecontrol.js"></script> Deze wel??-->
-<!--<script type="text/javascript" src="./js/modern/rating.js"></script>-->
-<!--<script type="text/javascript" src="./js/metro-slider.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/tile-slider.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/tile-drag.js"></script>-->
-<!--<script type="text/javascript" src="./js/modern/calendar.js"></script>-->
-<!--JS other-->
-<!--<script src="js/form-functions.js"></script>-->
+
 
 <?php
 require 'checkLevel.inc'; 
@@ -92,16 +64,8 @@ if($level >= 0){ //if valid user, init php page
 	for($i=0;$i<count($colors);$i++){
 		$colorSwatches .= '<div class="colorSwatch bg-'.$colors[$i].'" id="'.$colors[$i].'"></div>';
 	}
-}
-else{
-	echo '<title>Login Error</title>';
-}
-?>
-
-
-<script type="text/javascript">
-//include all necessary plugins of Metro-UI CSS
-	var plugins = [
+	//include all necessary plugins of Metro-UI CSS
+	$plugins = array(
     'core',
     'touch-handler',
     //'accordion',
@@ -129,14 +93,25 @@ else{
     //'hint',
     //'streamer',
     'scroll'
-];
+);
 
 //add the chosen plugins
-$.each(plugins, function(i, plugin){
-    $("<script/>").attr('src', 'js/metro-'+plugin+'.js').appendTo($('head'));
-});
+
+foreach( $plugins as $plugin){
+	echo "\n<script src='js/metro-".$plugin.".js'></script>";
+//    $("<script/>").attr('src', 'js/metro-'+plugin+'.js').appendTo($('head'));
+}
+
+}
+else{
+	echo '<title>Login Error</title>';
+}
 
 
+?>
+
+
+<script type="text/javascript">
 //Javascript input-control functions
 //Jeroen van Oorschot 2013
 //Used with Raspberry Pi Domotica
@@ -187,19 +162,10 @@ function initSliders(){
 					}
 
 				});
-		/*$('.slider').each(function(i, obj) {
-			var startValue = $(this).attr("data-init-value"); //get start value
-			$(".slider").slider({
-				orientation: "horizontal",
-				range: "min",
-				max: 100,
-				value: startValue
-			});
-		});*/
 }
 
 //init date time pickers
-function initDateTimePickers(){
+function initTimePickers(){
 
 	//Connect the plug with 24-hour format:
 	//$(".input-time").sltime({});
@@ -222,9 +188,10 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 	$(".input-tf").click(function() {   //on-off buttons
 			sendValue($(this).attr('id'),$(this).prop("checked"));
 	});									
-	$(".input-toggle").click(function() {//toggle state buttons
-			sendValue($(this).attr('id'),'toggle');
-    });									
+	$(".input-button").click(function() {// buttons
+			sendValue($(this).attr('id'),$(this).attr('id'));
+    });		
+								
 	$(".input-time").change(function() {//time input
 			var name = $(this).attr('id')
 			var val = $(this).val();
@@ -256,19 +223,7 @@ function bindActions(){ //Bind actions to events on buttons, usually call postVa
 			sendValue(name,$(checkedItem).attr('id'));
 			//window.alert(name+' met waarde '+val);
     }); 
-	//sliders are binded via init-slider
-	/*$( ".slider" ).on( "slidestop", function( event, ui ) { //Jquery UI slider
-		
-			var name = $(this).attr('id');
-			var val = (ui.value);
-			$("#"+name+"-txt").html(val);
-			sendValue(name,val);
-			//console.log(event,ui);
-	});*/
-	/*$('.div-slider').parent().parent().on('touchstart touchmove', function(e){
-		 //prevent native touch activity like scrolling
-		 e.preventDefault(); 
-	});/**/
+
 	$('.input-dayPicker').change(function(){
 		var name = $(this).attr('id')
 		name = name.substring(0,name.length-1);
@@ -336,26 +291,6 @@ function updateValue(name, type, value){
 	//console.log("updated: " + name + " ("+ type +") to "+ value);
 }
 
-//load updated values from the database, via loadValues.php . For instance if they are changed on another device.
-/*
-function updateValues(){ 
-	$.getJSON('loadValues.php',	 { page: page})
-	.done(function(data){
-		for(var key in data){ //get data json array
-			var name = key;
-			var typeVal = data[key];
-			var type = typeVal[0];
-			var value = typeVal[1];
-			updateValue(name, type, value);
-		}
-		console.log("Values are updated");
-	})
-	.fail(function(){ //server unreachable
-		console.log("Failed to load variables from server");
-	});			
-}
-*/
-
 ////////////////Page functions
 
 //apply a chosen color to all colored objects
@@ -363,9 +298,10 @@ function setColor(colorRGB){ //update colors
 	$(".fgColor").css("color",colorRGB); //foreground color
 	$(".bgColor").css("background-color",colorRGB);//general class bgColor
 	$(".noUi-connect").css("background",colorRGB);//slider
-	//$(".metro .switch.input-control input[type='checkbox']:checked").css("background-color",colorRGB); //switch control
+	//$('.metro .input-control.switch input[type="checkbox"]:checked').css("background",colorRGB); //switch control
+//	$(".metro .switch.input-control input[type='checkbox']:checked").css("background-color",colorRGB); //switch control //old version
+	$("body").append("<style>.metro .switch.input-control input[type='checkbox']:checked ~ .check{ 	background-color: "+colorRGB+" !important }</style>");
 }
-
 //set the width of the page such that all categories fit horizontally
 function setWidth(){ //change the widht of items dynamically. Also done in opmaak.css
 	var w, h, rw;
@@ -392,7 +328,7 @@ function buildPage(page2load, data){
 	page = page2load;
 	
 	initSliders(); //set the settings for all sliders, and the init values
-	initDateTimePickers(); //set the settings for all datetimepicker objects
+	initTimePickers(); //set the settings for all datetimepicker objects
 
 	setWidth(); //set the width of the page and the categories
 	setColor(data.color); //set the initial color, read from the db

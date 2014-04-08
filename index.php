@@ -20,9 +20,13 @@
 		<script type="text/javascript" src="./js/jquery-2.0.3.min.js"></script>
 		<script type="text/javascript" src="./js/jquery.widget.min.js"></script><!--also for metro ui-->
 		<script type="text/javascript" src="./js/metro-input-control.js"></script>
+
 		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
 		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
-
+<style>
+.button{
+	margin: 5px;
+}</style>
 
 		<!--<script type="text/javascript" src="./js/modern/input-control.js"></script>-->
 		<title>Raspberry || Home</title>
@@ -93,10 +97,11 @@
 					}
 					if($level >= 0){ //if valid user, if local or if logged in
 						echo '<a href="control.php" class="button" title="ga verder">Ga naar control</a>';
-						if($level > 1){ //show extra buttons if level is 2
+						if($level > 1 && $local){ //show extra buttons if level is 2
+					/*		echo '<br /><br /><a class="button" onClick="command(\'shutdown\')" title="Raspberry uitschakelen">Raspberry uitschakelen</a>';
+							echo '<br /><a class="button" onClick="command(\'reboot\')" title="Raspberry herstarten">Raspberry herstarten</a>';*/
 							echo '<br /><a href="http://192.168.1.104/phpmyadmin">PhpMyAdmin</a>'; 
-						}
-						if($local){ //if local user, show link for extern viewing
+							 
 							echo '<br /><a href="http://88.159.88.53">Bekijk website extern</a>'; 
 						}
 					}
@@ -106,21 +111,20 @@
 
 					?>
 					<br />
+                     <?php echo isset($_GET['e'])?'<br /><span style="background-color:red">Ongeldige gebruikersnaam of wachtwoord</span>':'' ?>
 					  	<form action="login.php" method="post">
 					    	<table>
-					      		<tr id="gebruikersnaam" <?php echo isset($_GET['usrnm'])?'class="'.$_GET['usrnm'].'"':'' ?>>
+					      		<tr id="gebruikersnaam">
 					        		<td> Gebruikersnaam: </td>
 					        		<td>
 		   								<input type="text" name="gebruikersnaam" data-transform="input-control" />
 									</td>
-	            					<?php echo isset($_GET['usrnm'])?'<td>Onbekende gebruikersnaam</td>':''; ?>
 	            				</tr>
-	          					<tr id="wachtwoord" <?php echo isset($_GET['pswd'])?'class="'.$_GET['pswd'].'"':'' ?>>
+	          					<tr id="wachtwoord">
 	            					<td> Wachtwoord: </td>
 	            					<td>
 	       								<input type="password" name="wachtwoord" data-transform="input-control" />
 									</td>
-	            					<?php echo isset($_GET['pswd'])?'<td>Verkeerd wachtwoord</td>':''; ?>
 	            				</tr>
 	        				</table>
 	        				<input type="submit" value="Inloggen" />

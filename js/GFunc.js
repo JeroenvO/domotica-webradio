@@ -38,14 +38,14 @@ function login(username, password, server, port){
                 'username': username,
                 'password': password,
             }
-            var loginpackage = JSON.stringify(logindata)
+            var loginpackage = JSON.stringify(logindata);
             SOCKET.send(loginpackage);   
             STATE = 2;
         }
         
         SOCKET.onmessage = function(event){
             msg = event.data;
-            log("state: " + STATE + "; message received: " + msg )
+            log("state: " + STATE + "; message received: " + msg );
             switch(STATE)
             {
             case 1:

@@ -22,8 +22,9 @@ else{//login
 	if(isset($_POST)){
 		require 'cons/afdwaka.con';
 		$usernm = mysql_real_escape_string(strip_tags(strtolower($_POST['gebruikersnaam'])));
-		if(isset($usernm) && ($usernm == 'local' || $username == 'localguest')) //don't allow these usernames
+		if(isset($usernm) && ($usernm == 'local' || $usernm == 'localguest')){ //don't allow these usernames
 			$usernm = '';
+		}
 		$password = md5(mysql_real_escape_string(strip_tags($_POST['wachtwoord'])).$salt);
 		$query = "SELECT pwdhash, level, fullname FROM users WHERE usernm='$usernm'";
 		if(!$resultaat = $db_con->query($query)) trigger_error('Fout in query: '.$db_con->error); 
@@ -51,10 +52,10 @@ else{//login
 					header("Location: control.php");
 			}
 			else{//pswd not matchin
-				header('Location: index.php?pswd=error');
+				header('Location: index.php?e=error');
 			}
 		}else{//no entry found in db
-			header('Location: index.php?usrnm=error');
+			header('Location: index.php?e=error');
 		}
 	}else{
 		echo 'No login, invalid';
