@@ -15,18 +15,25 @@ import json
 import hashlib
 import base64
 #import sys
-import wiringpi2
+#import wiringpi2
 import GFunc
 import IOFunc
-
 import PyDatabase  # for database
-
 #for sockets and connections:
 import socketserver
 import threading
+
+
+#Initialize all used ports and the display.
+IOF = IOFunc.IOFunc()
+
+
 #import sys
 #print(sys.path)
 
+sleep(0.5)
+
+IOF.displayWrite("Raspberry PI JvODomotica initing")
 print("Starting in 5 seconds...")
 sleep(5)
 
@@ -43,7 +50,7 @@ writeUpdateFactor = 40  # every x updates of checkUpdateTime updates are written
 
 #open the db functions and get the database login values
 GF = GFunc.GFunc()
-IOF = IOFunc.IOFunc()
+
 
 
 
@@ -79,12 +86,12 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
     elif tp == "tf" and xt is not None and xt.isdigit():
         try:
             pn = int(xt)  # pin
-            #value should be 'True' or 'False'
+            #value should be 'true' or 'false' for a tf, but 0 or 1 for setOutput
             if value == "true":
-                value = 1
+                vl = 1
             else:
-                value = 0
-            IOF.setOutput(pn, value)
+                vl = 0
+            IOF.setOutput(pn, vl)
         except:
             GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
     #drop down list items
@@ -95,6 +102,7 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
             playRadio(listItemValue)
         elif name == "geluidbron":  # sound source changed
             switchSound(listItemValue)  # choose sound source and play that source
+            IOF.displayWrite("src= " + value)
             if value == "Raspberry":
                 #raspberry sound source chosen
                 setVolume(0)
@@ -126,6 +134,7 @@ def writeUpdates():
     #GF.log("radiotext: " + radioText,'N')
     if radioText != settings['radioText'][1]:
         applySetting('radioText', radioText, 'all')  # send radio update to everyone
+        IOF.displayWrite(radioText)
     #GF.update('radioText', radioText)
 
 
@@ -147,8 +156,7 @@ def command(com):
 def switchSound(channel):
     GF.log("change soundinput to " + channel, 'S')
     #switch the amplifier input to channel
-    IOF.setSoundInput(int(channel))
-
+    IOF.setSoundInput(int(channel)) #this also sets amplifier off if needed
 
 ##radio functions
 #set radio volume
@@ -156,7 +164,6 @@ def setVolume(volume):
     #change value
     GF.log("change volume to " + str(volume), 'S')
     subprocess.call(["mpc",  "volume", str(volume)])
-
 
 #change the volume in a few steps for smooth transition
 def smoothVolume(reachVolume):
@@ -229,38 +236,34 @@ def getRadioText():
             return 'Radio tekst is niet beschikbaar'
     except:
         return "MPC is niet beschibaar"
+############################### Data requests for clients
+def getDataPoints(log,start,end):
+    qryEnd = ''
+    if start <= 1389123003:
+        GF.log('invalid start time for getDataPoints','E')
 
+    if end != None and end != '' and end != False and end >= 1389123003:
+        qryEnd = ' and UNIX_TIMESTAMP(timestamp)<='.str(end);
 
+    qry = 'Select UNIX_TIMESTAMP(timestamp) as ts, value from log_'+log+' where UNIX_TIMESTAMP(timestamp)>='+str(start) + qryEnd
 
-#radio functions
+    data = '['
+    db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
+    result = db.Execute(qry,True)
+    if result is not None:
+        for row in result:
+            data += '[' + str(row[0]) + ',' + str(row[1]) + '],'
 
+        data = data[:-1] + ']'
+        GF.log(data,'D')
+        return data
+    return False
 
-#####MAIN
-#check instance, quit if already running
-# """
-# file_handle = None
-# def file_is_locked(file_path):
-#     global file_handle
-#     file_handle= open(file_path, 'w')
-#     try:
-#         fcntl.lockf(file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-#         return False
-#     except IOError:
-#         return True
-#
-# file_path = '/var/lock/domotica'
-#
-# if file_is_locked(file_path):
-#     print 'another instance is running exiting now'
-#     sys.exit(0)
-# else:
-#     print 'no other instance is running'
-#     for i in range(5):
-#         time.sleep(1)
-#         print i + 1
-# 		"""
-##INIT
-#setPorts()
+##########################################some inits
+writeUpdateCount = 0
+settings = {}
+
+#All functions for control
 
 #Init the program. If something went wrong, this will run again to restart
 def initDomo():
@@ -294,12 +297,9 @@ def initDomo():
 
     GF.log('Init complete, starting now!','N')
 
-#some inits
-writeUpdateCount = 0
-settings = {}
-initDomo()
 
-############################### Socketservers tuff
+initDomo()
+###############################  Socket server stuff
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
@@ -397,50 +397,64 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 if self.data == "":  # skip if empty data
                     continue
                 GF.log("user "+str(user[0])+" send message: "+self.data, 'N')
-                if self.data == "testresponse":
-                    self.sendClient("R: Test complete!")
-                    GF.log("client "+ str(user[0]) +" requested test response", 'N')
-                    continue
-                #resend all values
-                if self.data == "resendValues" and user[1] ==2:
-                    GF.log("client "+ str(user[0]) +" requested value update", 'N')
-                    self.sendClient(json.dumps(settings))
-                    continue;
-               # ... if self.data == "shutdown" and user[1] ==2:
-               #      GF.log("client "+ str(user[0]) +" requested shutdown", 'N')
-               #      try:
-               #          self.sendClient("R: Raspberry shutdown")
-               #          subprocess.call(["sudo", "poweroff"])
-               #      except:
-               #          GF.log("shutdown failed",'E')
-               #          self.sendClient("R: shutdown failed")
-               #      continue;
-               #  if self.data == "reboot" and user[1] ==2:
-               #      GF.log("client "+ str(user[0]) +" requested reboot", 'N')
-               #      try:
-               #          self.sendClient("R: Raspberry reboot")
-               #          subprocess.call(["sudo", "reboot"])
-               #      except:
-               #          GF.log("reboot failed",'E')
-               #          self.sendClient("R: reboot failed")
-               #      continue;...
-                if user[1] == 2:  # if user has enough rights
-                    try:  # assuming json
-                        data = json.loads(self.data)
-                        #print(str(data),str(data.items()))
-                        for key, value in data.items():
-                            GF.log(key + ' val: '+value, "D")
-                            if value is not None and key != '':
-                                self.sendClient("OK")  # message is received, so confirm
-                                #print('now going to apply:',value,key)
-                                applySetting(key, value, self)  # apply setting and put in dictionary
-                            else:
-                                self.sendClient("W: empty request")
-                                GF.log("empty message received",'E')
 
-                    except:  # wrong assumption
-                        GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
-                        self.sendClient("W: Not a command or invalid name or type")
+                #decode data
+                type = self.data[0:2]
+                self.data = self.data[2:]
+                if user[1] >= 0:  # if user has enough rights
+                    if type == 'T:':  # testresponse
+                        self.sendClient("R: Test complete!")
+                        GF.log("client "+ str(user[0]) +" requested test response", 'N')
+
+                    elif type == "R:":  # resend all values
+                        GF.log("client "+ str(user[0]) +" requested value update", 'N')
+                        self.sendClient(json.dumps(settings))
+                       # continue;
+
+                    elif type == "D:" and user[1] >= 1: #download graph
+                        #try:
+
+                        data = json.loads(self.data)
+
+                        print(data)
+                        d = data.get('d')
+                        s = data.get('s')
+                        e = data.get('e')
+                        try:
+
+                            points = getDataPoints(d,s,e)
+                        except:
+                            print('points ERROR')
+                        print(points)
+
+                        self.sendClient('D:'+data.get('d')+'P:'+points)
+                        #except:
+                        #    self.sendClient("W: Invalid request for graph")
+                        #    GF.log("Invalid request for graph", 'E')
+                       # continue;
+
+
+                    elif type == 'S:' and user[1] == 2: #setting
+                        try:  # assuming json
+                            data = json.loads(self.data)
+                            #print(str(data),str(data.items()))
+                            for key, value in data.items():
+                                GF.log(key + ' val: '+value, "D")
+                                if value is not None and key != '':
+                                    self.sendClient("OK")  # message is received, so confirm
+                                    #print('now going to apply:',value,key)
+                                    applySetting(key, value, self)  # apply setting and put in dictionary
+                                else:
+                                    self.sendClient("W: empty request")
+                                    GF.log("empty message received",'E')
+
+                        except:  # wrong assumption
+                            GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
+                            self.sendClient("W: Not a command or invalid name or type")
+
+                    else:
+                        GF.log('User '+user[0]+' send invalid message','E')
+                        self.sendClient("W: Invalid message send")
                 else:
                     GF.log('User '+user[0]+' tried to send but has not enough rights','U')
                     self.sendClient("W: Not enough rights for this action")
@@ -509,7 +523,6 @@ def disconnect():
                 userClass.request.close()
         except:
             GF.log("ERROR: failed to close socket for user: "+u[0])
-
 # main init function for tcp server
 ThreadedServerHandler.SendRound = sendRound
 #ThreadedServerHandler.IsAdmin = IsAdmin
@@ -537,7 +550,6 @@ if __name__ == "__main__":
     server_thread.start()
     GF.log("Server loop running, waiting for connections ...",'N')
 
-    #print("Typ 'help' for available commands")
     while True:
         sleep(5)
         try:

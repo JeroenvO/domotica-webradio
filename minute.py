@@ -3,7 +3,7 @@
 __author__ = 'JvO'
 
 #Python Raspberry Pi Domotica
-#Jeroen van Oorschot 2013
+#Jeroen van Oorschot 2014
 #Functions that run every minute like alarms and timers
 
 import GFunc
@@ -100,6 +100,7 @@ def checkReclame():
 # send data to server
 def send(message):
     sleep(1)  # wait some time to prevent sending too fast
+    message = 'S:'+message
     sock.sendall(GF.create_frame(message))
     sleep(4)  # give server time to send response
     rec = str(GF.parse_frame(sock,False), "utf-8")

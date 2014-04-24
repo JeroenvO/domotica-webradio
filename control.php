@@ -44,6 +44,9 @@ body{
 		 it into your main stylesheet, if that makes 
 		 sense in your application. -->
 	<link href="./css/jquery.nouislider.modern.css" rel="stylesheet">
+<!--flot graphs-->
+<script src="js/jquery.flot.js"></script>
+<script src="js/jquery.flot.time.js"></script>
 <!--JS scrollto-->
 	<script src="./js/scrollto.js"></script>
 <!-- my JS functions for sending and receiving -->
@@ -122,6 +125,7 @@ var numCat; //variable for the number of categories, used give the page the righ
 var usernm = "<?php echo isset($usernm)?$usernm:''; ?>";
 var page;   //the current page, like 'bediening' 'logboeken'
 var builded=false; //whether there is a page
+var color;
 //prevent ajax cache, so always the new values are loaded from the server.
 $.ajaxSetup({
 		cache: false
@@ -166,10 +170,80 @@ function initSliders(){
 
 //init date time pickers
 function initTimePickers(){
-
+	
 	//Connect the plug with 24-hour format:
-	//$(".input-time").sltime({});
-
+//	$(".input-time").({});
+}
+function initGraphs(){
+	//graphs
+	$.plot("div.graph", [], []);
+	
+	//buttons
+	var start=0;
+	$(".graph-btn-4hour").click(function(){  //graph buttons
+		start =	Math.round(new Date().getTime()/1000) - 14400;
+		getData($(this).attr('id'),start,0);
+    });
+	$(".graph-btn-day").click(function(){  //graph buttons
+		start =	Math.round(new Date().getTime()/1000) - 86400;
+		getData($(this).attr('id'),start,0);
+    });
+	$(".graph-btn-week").click(function(){  //graph buttons
+		start =	Math.round(new Date().getTime()/1000) - 604800;
+		getData($(this).attr('id'),start,0);
+    });
+	$(".graph-btn-month").click(function(){  //graph buttons
+		start =	Math.round(new Date().getTime()/1000) - 2592000;
+		getData($(this).attr('id'),start,0);
+    });
+	$(".graph-btn-year").click(function(){  //graph buttons
+		start =	Math.round(new Date().getTime()/1000) - 31536000;
+		getData($(this).attr('id'),start,0);
+    });
+	
+	
+}
+function updateGraph(graph,data){
+	data = eval(data);
+	var l = data.length;
+	for(var i=0;i<l;i++){
+		data[i][0] = data[i][0]*1000; //convert to ms
+	}
+	
+	var t = '%H:%M';
+	var d = 'minute'
+	if(l > 2*24*2){ //more than two day
+		t = '%H:00';
+		d =  'hour';
+	}if(l > 2*24*7){
+		d = 'day';
+		t = '%a';
+	}if(l>2*24*7*6){//six weeks
+		t = '%m';
+		d = 'week';
+	}if( l > 2*24*7*50){ //year
+		d = 'month';
+		t = '%q';
+	}
+	
+	console.log('Updating: ',graph,data);
+	$.plot('div.graph#'+graph, [data], {
+			xaxis: { mode: "time"
+					, minTickSize: [1, d]
+					, timeformat: t
+					, timezone: 'browser'
+			},
+			series: {
+				color: color,
+		        lines: { show: true },
+		        points: { show: true }
+		    },
+			grid: {
+				show: true,
+				hoverable: true,
+				autoHighlight: true
+			}
+		});
 }
 
 //init all buttons and options by applying events like 'click' on them and binding them to the appropriate function, mostly post
@@ -254,7 +328,7 @@ function updateValue(name, type, value){
 	//console.log(find);
 	switch(type){
 		case 'tf'://switch buttons
-            tf = (value=="true"?true:false);
+            var tf = (value=="true"?true:false);
             //console.log(find+tf);
 			$(find).prop("checked", tf);
 		break;
@@ -277,7 +351,7 @@ function updateValue(name, type, value){
 		case 'dayPicker':
 			//console.log(name+'  '+value);
 			for(var i=0;i<7;i++){
-				tf = (value.charAt(i)=="t"?true:false);
+				var tf = (value.charAt(i)=="t"?true:false);
 				$(find+i).prop("checked", tf);
 				//console.log(name+'  '+i + ' : ' +tf);
 			}
@@ -295,6 +369,7 @@ function updateValue(name, type, value){
 
 //apply a chosen color to all colored objects
 function setColor(colorRGB){ //update colors
+	color = colorRGB;
 	$(".fgColor").css("color",colorRGB); //foreground color
 	$(".bgColor").css("background-color",colorRGB);//general class bgColor
 	$(".noUi-connect").css("background",colorRGB);//slider
@@ -324,11 +399,17 @@ function buildPage(page2load, data){
 	$('#page-buttons').html(data.pbt); //page buttons
 	$('#cat-buttons').html(data.cbt); // cat buttons
 	$('#cat-page').html(data.cnt); //  page content
-	numCat = data.nmct;
-	page = page2load;
+	var numCat = data.nmct;
+	var page = page2load;
 	
-	initSliders(); //set the settings for all sliders, and the init values
-	initTimePickers(); //set the settings for all datetimepicker objects
+	if(page2load == 'bediening'){
+		initSliders(); //set the settings for all sliders, and the init values
+		initTimePickers(); //set the settings for all datetimepicker objects
+	
+		loadValues(); //load the data via websockets
+	}else if(page2load == 'logboeken'){
+		initGraphs();
+	}
 
 	setWidth(); //set the width of the page and the categories
 	setColor(data.color); //set the initial color, read from the db
@@ -339,9 +420,7 @@ function buildPage(page2load, data){
 	console.log('page ' + page2load + ' builded');
 	builded = true;
 	
-	if(page2load == 'bediening'){
-		loadValues();
-	}
+	
 }
 
 //load the data of a page asynchronous from loadPage.php.
@@ -367,11 +446,23 @@ function loadPage(page2load){ //load a page from loadPage.php
  //post a changed setting to the server
 function sendValue(name,value)
 {      
-    if(SOCKET.readyState == 1){
-        var data = '{"'+name+'":"'+value+'"}';
+	STATE = 2;
+    var data = 'S:{"'+name+'":"'+value+'"}';
+	sendSocket(data);
+}
+function getData(graph, start, end){
+	STATE = 1;
+	var data = 'D:'+'{"d":"'+graph+'","s":'+start;
+	if(end!=0){
+		data += ',"E":'+end;
+	}
+	data += '}';
+	sendSocket(data);	
+}
+function sendSocket(data){
+	if(SOCKET.readyState == 1){
         log("sending: " + data);
-        STATE = 2;
-        SOCKET.send(data);  
+        SOCKET.send(data);
     }else{
         log('Socket Status: ' + SOCKET.readyState+' (Closed)');
         //alert('De verbinding met de server is gesloten. Vernieuw de pagina om opnieuw te proberen.')

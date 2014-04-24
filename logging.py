@@ -2,7 +2,7 @@
 
 
 #Python Raspberry Pi Logging
-#Jeroen van Oorschot 2013
+#Jeroen van Oorschot 2014
 #Server side script write logs to database
 #v 0.1
 #changelog
@@ -46,13 +46,13 @@ def setOutput(pin, value):
 
 def setPorts():
     GPIO.setmode(GPIO.BCM)
-    inputs = [4]
-    outputs = [5,8]
-    for input in inputs:
-        GPIO.setup(input, GPIO.IN)
-
-    for output in outputs:
-        GPIO.setup(output, GPIO.OUT)
+    #inputs = [4]
+    #outputs = [5,8]
+    #for input in inputs:
+    #    GPIO.setup(input, GPIO.IN)
+#
+    #for output in outputs:
+    #    GPIO.setup(output, GPIO.OUT)
 	
 ########LOG FUNCTIONS
 #write a value in a log
@@ -71,9 +71,10 @@ def writeLog(table,value):
     db.Close()
 #cpu temp logger
 def logCPUTemp():
-    proc = subprocess.Popen(["/opt/vc/bin/vcgencmd measure_temp"], stdout=subprocess.PIPE, shell=True)
-    (out, err) = proc.communicate()
-    temp = out[5:7]
+    proc = str(subprocess.check_output(["/opt/vc/bin/vcgencmd", "measure_temp"], universal_newlines=True, stderr=subprocess.STDOUT))
+
+
+    temp = proc[5:7]
     #print("CPU Temperature = ")
     #print(temp)
     writeLog("log_CPUTemp",temp)

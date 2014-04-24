@@ -20,6 +20,7 @@ GF = GFunc.GFunc()
 address = 0x20 #23017 for audio and display
 OUTPUT = 1
 INPUT = 0
+PUD_UP = 2  # pull up resistor
 PB1 = 64  # pinbase for first (audio and display) expander
 PB2 = 16+PB1 #pinbase for relay control expander
 OUTPUT_PINS_1 = [64,65, 69,70,71,72,73,74,75,76,77,78,79]
@@ -45,24 +46,31 @@ class IOFunc():
         for pin in OUTPUT_PINS_2:
             wp.pinMode(pin,OUTPUT)
         for pin in INPUT_PINS_2:
+            wp.pullUpDnControl(pin,PUD_UP)
             wp.pinMode(pin, INPUT)
 
-        #display
 
-      #  wp.lcdInit(2, 16, 8, rs, strb, d0, d1, d2, d3, d4, d5, d6, d7)
+        #display
+        wp.digitalWrite(70,0)  # write mode
+        self.display1 = wp.lcdInit(2,16,8, 71,69,72,73,74,75,76,77,78,79) #connected to first expander
+        wp.lcdClear(self.display1)
 
 
     def setSoundInput(self, channel):
-        if channel > 3 or channel < 0:
+        if channel > 3 or channel < 0:  # impossible channels
             return False
 
         if channel == 0:
-            channel = 3
+            channel = 3           # set channel to raspberry
+            self.setOutput(95,0)  # disable amplifier
+        else:
+            self.setOutput(95,1)  # enable amplifier
+
         channel = bin(channel)
 
         if(len(channel)<4):  # channel == 1 or == 0
             bit0 = 0
-            bit1 = 1  # int(channel[2])
+            bit1 = 1
         else:
             bit0 = int(channel[2])
             bit1 = int(channel[3])
@@ -72,13 +80,27 @@ class IOFunc():
 
         #set output
     def setOutput(self, pin, value):
-        if(value == 1 or value == 0):
+        if((value == 1 or value == 0) and ( pin in OUTPUT_PINS_1 or pin in OUTPUT_PINS_2)):
             GF.log("tf switch " + str(pin) + " to " + str(value), 'S')
             #set gpio
             try:
-
                 wp.digitalWrite(pin, value)
             except:
                 GF.log("Error in writing output pin");
         else:
             GF.log("Invalid value")
+
+    #clean the display and write a string
+    def displayWrite(self,string):
+        string=string[0:32]
+        GF.log("writing "+string+" to lcd",'D')
+        wp.lcdClear(self.display1)
+        wp.lcdHome(self.display1)
+        wp.lcdPrintf(self.display1, string)
+
+    #read buttons next to lcd
+    def readButtons(self):
+        back = wp.digitalRead(67)
+        front = wp.digitalRead(68)
+        return [front, back]
+

@@ -2629,6 +2629,7 @@ a {
 .metro .input-control.switch input[type="radio"]:focus ~ .check {
   outline: 1px #999999 dotted !important;
 }
+/*sets the color of the switch control*/
 .metro .input-control.switch input[type="checkbox"]:checked ~ .check {
   background: #008287;
 }

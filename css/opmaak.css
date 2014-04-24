@@ -44,7 +44,9 @@ div#footer{
 	margin-top: 10px;
 	white-space: nowrap;
 }
-
+div.graph{
+	margin: 10px;
+}
 #page-buttons{ /*container around pag-button 's */
 	/*min-width:280px;
 	*/

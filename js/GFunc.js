@@ -20,7 +20,7 @@ function log(msg){
 }
 //request a refresh of the settings
 function loadValues(){
-	SOCKET.send("resendValues");
+	SOCKET.send("R:");
 	STATE =1;
 }
 //log in to the socketserver
@@ -50,13 +50,29 @@ function login(username, password, server, port){
             {
             case 1:
                 //handle incoming messagesrea
-                try{
-                    var values = eval('(' + msg + ')');
-                    //console.log("received message: " + values);
-                    updateValuesJSON(values);
-                }catch(exception){
-                    log("error parsing incoming JSON: " + exception);
-                }
+				type = msg.substr(0,2);
+				if(type=='D:'){ //DECODE GRAPH
+					try{
+						log(msg);
+						var i = msg.indexOf("P:")
+						graph = msg.substring(2,i)
+						points = msg.substring(i+2);
+						log(points);
+						
+						updateGraph(graph,points)
+					}catch(exception){
+						log("error parsing incoming JSON graph points: " + exception);
+					}
+				}
+				else{	//SETTING
+					try{
+						var values = eval('(' + msg + ')');
+						//console.log("received message: " + values);
+						updateValuesJSON(values);
+					}catch(exception){
+						log("error parsing incoming JSON setting: " + exception + " message: " + msg);
+					}
+				}
                 //not yet made
                 break;
             case 2:
@@ -74,15 +90,15 @@ function login(username, password, server, port){
                             //back to loginpage
                         break;
                         case "W": //warning
-                            alert("The operation you tried is not permitted, nothing happened.\nReason: ");
+                            alert("The operation you tried is not permitted, nothing happened.\nReason: "+msg[1]);
                             //do nothing
                         break; 
                         case "R": //response
-                            log("The server send a message back: ");
+                            log("The server send a message back: "+msg[1]);
                             //do something with the received data
                         break;
                         default:
-                            log("The server send an invalid message back: ");
+                            log("The server send an invalid message back: "+msg[1]);
                         break;
                     }
 

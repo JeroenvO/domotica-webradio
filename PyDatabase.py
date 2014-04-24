@@ -1,5 +1,7 @@
 __author__ = 'williewonka'
-
+# script for talking to a mysql database
+# Used in Raspberry PI domotica
+# Jeroen van Oorschot 2014
 # import MySQLdb
 import pymysql as MySQLdb
 import time

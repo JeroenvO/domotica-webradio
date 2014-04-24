@@ -189,6 +189,14 @@ if(isset($_GET['page'])){
 													}
 													$cnt .= '</table>';
 												break;
+												case 'graph':
+													$cnt .='
+													<button class="graph-btn-4hour" id="'.$row_opt['name'].'">4 uur</button> 
+													<button class="graph-btn-day" id="'.$row_opt['name'].'">dag</button> 
+													<button class="graph-btn-week" id="'.$row_opt['name'].'">week</button> 
+													<button class="graph-btn-month" id="'.$row_opt['name'].'">maand</button> 
+													<div class="graph" id="'.$row_opt['name'].'" style="display:block; width:auto; height:400px; "></div>';
+												break;
 												case 'table_users':
 													$qry_log = 'select * from '.$row_opt['value'].' order by timestamp desc limit 100';
 													if(!$res_log = $db_con->query($qry_log)){
