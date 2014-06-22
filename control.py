@@ -22,7 +22,7 @@ import PyDatabase  # for database
 #for sockets and connections:
 import socketserver
 import threading
-
+import argparse
 
 #Initialize all used ports and the display.
 IOF = IOFunc.IOFunc()
@@ -38,15 +38,14 @@ print("Starting in 5 seconds...")
 sleep(5)
 
 connection = []
-connectedClients= []
+#connectedClients= []
 #bannedips = []
 #MAXCHARS = 124
-allowedIPs = ['101','102','103','104']
+allowedIPs = ['101','102','103']
 allowedComs = ["poweroff", "reboot"]
 #####
 #some constants
-checkUpdateTime = 0.1   # every x seconds the database is checked for updates
-writeUpdateFactor = 40  # every x updates of checkUpdateTime updates are written
+writeUpdateTime = 3   # every x seconds the database is checked for updates
 
 #open the db functions and get the database login values
 GF = GFunc.GFunc()
@@ -59,8 +58,10 @@ GF = GFunc.GFunc()
 def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='none': send to no-one; sender=self: all but sender
     #GF.log("applysetting: "+name+':'+str(value)+' send to: '+str(sendTo),"D")
     tp = settings[name][0]  # row[2]  # type
+
+    #write value in the settings dict
     if type(name) == str and value is not None and name != '':
-        value = str(value)  # value
+        #value = str(value)  # value
         #settings: {key : [type, value, extra] }
         #update settings dictionary
         try:
@@ -76,24 +77,31 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
     # read arguments
 
     xt = settings[name][2]  # str(row[3])  # extra info, pin nr
-    value = str(value)
-    GF.log('applySetting setting "'+name+'" to "' +value+'"','N')
+    #value = str(value)
+    GF.log('applySetting setting "'+name+'" to "' +str(value)+'"','N')
 
-    if tp == "button": #execute a command
-        if sendTo != 'none': #don't do this on the init. Only if it comes from a user
+    #set the setting
+
+    #execute a command
+    if tp == "button":
+        if sendTo != 'none': #don't do this on the init (to prevent reboot loop) Only if it comes from a user
             command(name)
-    # true-false switch for a port
-    elif tp == "tf" and xt is not None and xt.isdigit():
-        try:
-            pn = int(xt)  # pin
-            #value should be 'true' or 'false' for a tf, but 0 or 1 for setOutput
-            if value == "true":
-                vl = 1
-            else:
-                vl = 0
-            IOF.setOutput(pn, vl)
-        except:
-            GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
+    # true-false switch for a port, set an output pin (xt) to the given value
+    elif tp == "tf":
+        #an output pin
+        if xt is not None and xt.isdigit():
+            try:
+                pn = int(xt)  # pin
+                #value should be 'true' or 'false' for a tf, but 0 or 1 for setOutput
+                if value:
+                    vl = 1
+                else:
+                    vl = 0
+                IOF.setOutput(pn, vl)
+            except:
+                GF.log("Error, not possible to set " + str(pn) + " to " + str(value),'E')
+        elif name == "skipAds" and value == True and settings["radiostation"] != "538nonstop40":
+            applySetting("radiostationTemp",settings["radiostation"][1],'all')
     #drop down list items
     elif tp == "list":
         listItemValue = settings[value][1]  # get value of selected item in list. Value of list is the name of the selected item
@@ -108,16 +116,17 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
                 setVolume(0)
                 resumeRadio()
                 smoothVolume(settings['volume'][1])
-            else:
+            else:#disable radio
                 smoothVolume(0)
                 pauseRadio()  # stop music playing
                 setVolume(settings['volume'][1])
     elif tp == "slider":      # slider input
         if name == "volume":    # change volume
             smoothVolume(value)
-    #updat the change to others
+
+    #update the change to others
     try:
-        data = json.dumps({name : ( tp, value) })  # { name : [ type, value] }
+        data = 'S'+json.dumps({name : ( tp, value) })  # { name : [ type, value] }
         if sendTo == 'all':
             sendRound(data, False)
         elif sendTo != 'none':
@@ -167,9 +176,9 @@ def setVolume(volume):
 
 #change the volume in a few steps for smooth transition
 def smoothVolume(reachVolume):
-    reachVolume = int(reachVolume)
+    reachVolume = int(reachVolume) #no longer necessary
     try:
-        volume = int(settings['volume'][1])
+        volume = int(settings['volume'][1]) #no longer necessary
     except:
         GF.log("Current volume could not be read, using 0",'N')
         volume = 0
@@ -288,7 +297,10 @@ def initDomo():
 
     if results is not None:
         for row in results:
-            settings[row[0]] = list(row[1:4])  # add setting to dictionary
+            #row[1]#type
+            #row[2]#value
+            #row[3]#extra
+            settings[row[0]] = [row[1],json.loads(row[2]),row[3]] #list(row[1:4])  # add setting to dictionary
 
     GF.log('dict: ' + str(settings), 'D')
     #apply loaded settings for init
@@ -329,34 +341,33 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
             self.sendClient("E: wrong format login package")
             GF.log("ERROR: client from "+str(addr)+" sent wrong loginrequest: " + str(loginData))
             return
-
+        #login procedure
         username = str(loginData["username"])
         password = str(loginData["password"])
         GF.log('User: ' + username + ' trying to login from: ' + str(addr) ,'N')
-        #GF.log('addr0-9: ' +addr[0:9], "D" )
-        validUser = False
-        print('client addr: '+addr)
+
+        # local user
         if addr[0:9] == '192.168.1':
-            if addr[10:13] in allowedIPs:  # local user
+            #phone, laptop, or ethernet
+            if addr[10:13] in allowedIPs:
                 user = [username, 2, 'Lokale gebruiker', None, addr, self]
-                validUser = True
                 GF.log('Local user accepted', "N")
-
-                if addr[0:13] == '192.168.1.104':
-                    #print('minute logging in, switching to websocket protocol')
-                    self.websocket = 'python'   # switch to websockets here for minute.py
-
-                self.sendClient("OK, valid login as local user")
+                self.sendClient("A:local user")
+            #minute user, self
+            elif addr[0:13] == '192.168.1.104':
+                #print('minute logging in, switching to websocket protocol')
+                user = [username, 2, 'rpi user', None, addr, self]
+                self.websocket = 'python'   # switch to websockets here for minute.py
+                self.sendClient("A rpi user")
+                self.sendClient(json.dumps(settings)) #send the values to minute.py
+            #local guest
             else:
                 user = ['localguest', 1, 'Lokale gast', None, addr, self]
-                validUser = True
                 GF.log('Local guest user accepted', "N")
-                self.sendClient("OK, valid login as local guest user")
+                self.sendClient("A Local guest user")
         elif username != '' and password != '':  # remote user
             #check user validity here via database
             db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
-            # make query
-            # qry = "select level, fullname, value from RPi.users WHERE usernm='"+username+"' AND pwdhash='"+password+"'"
             condition_and = {
                 'usernm' : username,
                 'pwdhash' : password
@@ -368,23 +379,20 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 return False
             if results is not None:  # The user exists. name, level, fullname, value
                 user = [username, results[0][0], results[0][1], results[0][2], addr, self]
-                validUser = True
-                self.sendClient("OK, valid login as remote user")
+                self.sendClient("A Remote user")
                 GF.log('OK, valid login as remote user',"N")
             else:
                 GF.log('This is an invalid user, stopping now', 'N')
-                self.sendClient("E: invalid user or password send. Stopping connection now")
+                self.sendClient("E invalid user or password send. Stopping connection now")
                 return False
         else:  # not valid user
             GF.log('This is an empty request, stopping now', 'N')
-            self.sendClient("E: username and password empty. Stopping connection now")
+            self.sendClient("E username and password empty. Stopping connection now")
             return False
 
         connection.append(user)
-        connectedClients.append(user)
+        #connectedClients.append(user)
 
-        # send all settings values to the connected user:
-        self.sendClient(json.dumps(settings))
 
         while True:
             try:
@@ -399,75 +407,65 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 GF.log("user "+str(user[0])+" send message: "+self.data, 'N')
 
                 #decode data
-                type = self.data[0:2]
-                self.data = self.data[2:]
+                type = self.data[0:1]
+                data = json.loads(self.data[1:])  # all data is in json format
                 if user[1] >= 0:  # if user has enough rights
-                    if type == 'T:':  # testresponse
-                        self.sendClient("R: Test complete!")
-                        GF.log("client "+ str(user[0]) +" requested test response", 'N')
+                    if type == 'M':  # message
+                        GF.log("client "+ str(user[0]) +" send a message: " + str(data), 'N')
 
-                    elif type == "R:":  # resend all values
+                    elif type == "R":  # resend all values
                         GF.log("client "+ str(user[0]) +" requested value update", 'N')
-                        self.sendClient(json.dumps(settings))
-                       # continue;
+                        self.sendClient('S'+json.dumps(settings))
 
-                    elif type == "D:" and user[1] >= 1: #download graph
-                        #try:
-
-                        data = json.loads(self.data)
-
+                    elif type == "D" and user[1] >= 1: #download graph
                         print(data)
                         d = data.get('d')
                         s = data.get('s')
                         e = data.get('e')
                         try:
-
                             points = getDataPoints(d,s,e)
                         except:
                             print('points ERROR')
                         print(points)
-
                         self.sendClient('D:'+data.get('d')+'P:'+points)
-                        #except:
-                        #    self.sendClient("W: Invalid request for graph")
-                        #    GF.log("Invalid request for graph", 'E')
-                       # continue;
 
-
-                    elif type == 'S:' and user[1] == 2: #setting
-                        try:  # assuming json
-                            data = json.loads(self.data)
-                            #print(str(data),str(data.items()))
+                    elif type == 'S' and user[1] == 2: #setting
+                        try:
                             for key, value in data.items():
-                                GF.log(key + ' val: '+value, "D")
+                                GF.log(key + ' val: '+str(value), "D")
                                 if value is not None and key != '':
-                                    self.sendClient("OK")  # message is received, so confirm
+                                    #self.sendClient("OK")  # message is received, so confirm
                                     #print('now going to apply:',value,key)
                                     applySetting(key, value, self)  # apply setting and put in dictionary
                                 else:
-                                    self.sendClient("W: empty request")
+                                    self.sendClient("W Empty setting")
                                     GF.log("empty message received",'E')
-
                         except:  # wrong assumption
                             GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
-                            self.sendClient("W: Not a command or invalid name or type")
+                            self.sendClient("W Not a command or invalid name or type")
+
+                    elif type == 'P': #load a page
+                        src = '/var/www/'+ data.get('p') + '.txt'
+                        if data.get('c')=='True':
+                            self.sendClient("W not yet possible to refresh cache via websocket")
+                            GF.log("W not yet possible to refresh cache via websocket",'E')
+
+                        self.sendClient('P'+open(src ,'r').read())
 
                     else:
                         GF.log('User '+user[0]+' send invalid message','E')
-                        self.sendClient("W: Invalid message send")
+                        self.sendClient("W Invalid message send")
                 else:
                     GF.log('User '+user[0]+' tried to send but has not enough rights','U')
-                    self.sendClient("W: Not enough rights for this action")
-
+                    self.sendClient("W Not enough rights for this action")
             except:
                 GF.log("INFO: client "+username+" from "+addr+" disconnected",'N')
                 try:
                     connection.remove(user)
-                    connectedClients.remove(user)
+                    #connectedClients.remove(user)
                 except:
                     GF.log("Failed to remove user: "+user[0]+" from connected users list", 'E')
                 return
-
 
     def HandShake(self, request):
         specificationGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -480,7 +478,6 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 protocol = line.split(":")[1].strip().split(",")[0].strip()
             elif "Origin" in line:
                 self.origin = line.split(":")[0]
-
         # print("websocketkey: " + websocketkey + "\n")
         fullKey = hashlib.sha1(websocketkey.encode("utf-8") + specificationGUID.encode("utf-8")).digest()
         acceptKey = base64.b64encode(fullKey)
@@ -511,6 +508,7 @@ def sendRound(data, sender=False):
                 GF.log("ERROR: failed to send message to user: "+u[2])
     else:
         return False
+
 def disconnect():
     GF.log("STOP, now closing all sockets", "N")
     for u in connection:
@@ -523,6 +521,8 @@ def disconnect():
                 userClass.request.close()
         except:
             GF.log("ERROR: failed to close socket for user: "+u[0])
+
+
 # main init function for tcp server
 ThreadedServerHandler.SendRound = sendRound
 #ThreadedServerHandler.IsAdmin = IsAdmin
@@ -533,11 +533,12 @@ ThreadedServerHandler.SendRound = sendRound
 
 if __name__ == "__main__":
     GF.log("Jeroen van Oorschot, domotica-webradio","N")
-    #parser = argparse.ArgumentParser(description='the server component of kolibri chat')
+    parser = argparse.ArgumentParser(description='Jeroen van Oorschot, Domotica system and webradio')
     #parser.add_argument('--ip', nargs='?', const=1, type=str, default="localhost", help='specify the ip adress wich the server will bind to, defaults to localhost')
-    #parser.add_argument('--port', nargs='?', const=1, type=int, default=6000, help='specify the port number, defaults to 9999')
+    parser.add_argument('--port', nargs='?', const=1, type=int, default=600, help='specify the port number, defaults to 600')
 
-    PORT = 600 #parser.parse_args().port
+    #PORT = 600 #
+    PORT = parser.parse_args().port
     HOST = '192.168.1.104'
 
     GF.log("host: " + str(HOST) + ":" + str(PORT), "N")
@@ -551,11 +552,16 @@ if __name__ == "__main__":
     GF.log("Server loop running, waiting for connections ...",'N')
 
     while True:
-        sleep(5)
+        sleep(writeUpdateTime)
         try:
             writeUpdates()
         except:
             print("Error in writeUpdates")
+
+
+
+
+
 
         """command = input()
         try:
@@ -574,9 +580,6 @@ if __name__ == "__main__":
  #               disconnect()
 #                server_thread.shutdown()
  #               exit()
-            elif command =="users":
-                for u in connectedClients:
-                    print(str(u)+'\n')
             elif command == "controls":
                 print(str(settings))
         except:

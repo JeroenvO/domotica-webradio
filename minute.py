@@ -15,6 +15,7 @@ import time
 from time import sleep
 import json
 import socket
+#import pickle
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,8 +26,8 @@ GF = GFunc.GFunc()
 def startAlarm(alarmNum,):
     #start alarm
     GF.log("Alarm " + str(alarmNum) + " turning on now", 'N')
-    #print(json.dumps({'volume' : str( settings['a' + alarmNum + '_alarmVol'][1] ), 'geluidbron' : 'Raspberry'}))
-    send(json.dumps({'volume' : str( settings['a' + alarmNum + '_alarmVol'][1] ), 'geluidbron' : 'Raspberry'}))
+    print(json.dumps({'volume' : settings['a' + alarmNum + '_alarmVol'][1], 'geluidbron' : 'Raspberry'}))
+    send(json.dumps({'volume' : settings['a' + alarmNum + '_alarmVol'][1], 'geluidbron' : 'Raspberry'}))
 
 
 # check alarms
@@ -34,7 +35,7 @@ def checkAlarms():
     for i in range(1,5):  # for each alarm that is turned on
         alarmNum = str(i)
         #print(alarmNum)
-        if settings['a' + alarmNum + '_alarmOn'][1] == 'true':
+        if settings['a' + alarmNum + '_alarmOn'][1] == True:
             at = settings['a' + alarmNum + '_alarmTime'][1].split(':')
            #GF.log('alarm ' + alarmNum + ' is being checked'+str(at), "D")
             if int(at[0]) == th and int(at[1]) == tm:  # time match, alarm should ring now
@@ -43,7 +44,7 @@ def checkAlarms():
                 # check if it is an one-time alarm, meaning no repeating days are selected
                 if alarmDays == 'fffffff':   # everything false oneTimeAlarm = True
                     #try:
-                    send(json.dumps({'a' + str(alarmNum) + '_alarmOn' : 'false'}))
+                    send(json.dumps({'a' + str(alarmNum) + '_alarmOn' : False}))
                     GF.log('one time alarm ' + str(alarmNum) + ' turned off', 'N')
                     startAlarm(alarmNum)
                    # except:
@@ -78,7 +79,7 @@ def checkAutoOff():
 
 #check whether to change radiostation to skip the adds
 def checkReclame():
-    if settings['geluidbron'][1] == 'Raspberry' and settings['skipAds'][1] == 'true': #radio is on
+    if settings['geluidbron'][1] == 'Raspberry' and settings['skipAds'][1] == True: #radio is on
         try:
             if tm == 57:  # time match
                 #change station
@@ -100,18 +101,11 @@ def checkReclame():
 # send data to server
 def send(message):
     sleep(1)  # wait some time to prevent sending too fast
-    message = 'S:'+message
-    sock.sendall(GF.create_frame(message))
-    sleep(4)  # give server time to send response
-    rec = str(GF.parse_frame(sock,False), "utf-8")
-    #print(rec)
-    if rec  == 'OK':
-        #print('message is received by server')
-        return True
-    else:
-        GF.log('Server did not receive message, now trying again','E')
-        sleep(1)
-        send(message)
+    message = 'S'+message
+    GF.log("Tx: "+message)
+    message = GF.create_frame(message)
+    sock.sendall(message)
+
 
 try:
     sock.connect(('192.168.1.104', 600))
@@ -137,9 +131,10 @@ except:
     sock.close()
     exit()
 
-if answer[0:2] == 'OK':
-    sleep(1)
-    #switch to websocket protocol from now on
+if answer[0:1] == 'A':
+    sleep(0.1)
+
+    #retrieve the settings, minute user gets data automatically
     msg = str(GF.parse_frame(sock,False), "utf-8")  # str(sock.recv(3000), "utf-8")
     GF.log('data: '+msg, "N")  # print all data that is going to be written to db
 
@@ -149,7 +144,7 @@ if answer[0:2] == 'OK':
     for key, value in settings.items():
         value=value[1]
         if value is not None and key is not None and value != '' and value != 'null' :
-            qry += " WHEN '" + key + "' THEN '" + db.Escape(value) + "' "
+            qry += " WHEN '" + key + "' THEN '" + json.dumps(value) + "' "
     qry += 'END WHERE type IS NOT NULL'
     results = db.Execute(qry)
     if results is False:
@@ -158,6 +153,11 @@ if answer[0:2] == 'OK':
 
     th = time.localtime()[3]
     tm = time.localtime()[4]
+
+    try:
+        checkReclame()
+    except:
+        print('reclame error')
     #try:
     checkAlarms()
     #except:
@@ -166,16 +166,13 @@ if answer[0:2] == 'OK':
     checkAutoOff()
     #except:
      #   print('autooff error')
-    try:
-        checkReclame()
-    except:
-        print('reclame error')
+
     #print('finished')
     #print('closing:')
     #send("close")
     #sock.shutdown(1)
     sock.close()
-    time.sleep(2)
+    time.sleep(1)
 else:
     GF.log("login to server failed: "+answer)
 
