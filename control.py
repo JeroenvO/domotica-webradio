@@ -64,6 +64,7 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
         #value = str(value)  # value
         #settings: {key : [type, value, extra] }
         #update settings dictionary
+        oldval = settings[name][1]
         try:
             settings[name][1] = value
         except:
@@ -85,7 +86,10 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
     #execute a command
     if tp == "button":
         if sendTo != 'none': #don't do this on the init (to prevent reboot loop) Only if it comes from a user
-            command(name)
+            if name == "reinit":
+                initDomo()
+            else:
+                command(name)
     # true-false switch for a port, set an output pin (xt) to the given value
     elif tp == "tf":
         #an output pin
@@ -110,16 +114,22 @@ def applySetting(name, value, sendTo): #sender='all': send to everyone; sender='
             playRadio(listItemValue)
         elif name == "geluidbron":  # sound source changed
             switchSound(listItemValue)  # choose sound source and play that source
-            IOF.displayWrite("src= " + value)
+            IOF.displayWrite("src= " + str(value))
+            if oldval == "Raspberry" and value != "Raspberry":#disable radio
+                smoothVolume(0)
+                pauseRadio()  # stop music playing
+                setVolume(settings['volume'][1])
+            elif oldval == "bluetooth":
+                stopBluetooth()
+            #set new:
             if value == "Raspberry":
                 #raspberry sound source chosen
                 setVolume(0)
                 resumeRadio()
                 smoothVolume(settings['volume'][1])
-            else:#disable radio
-                smoothVolume(0)
-                pauseRadio()  # stop music playing
-                setVolume(settings['volume'][1])
+            elif value == "bluetooth":
+                GF.log("bluetooth starting.....",'D')
+                startBluetooth()
     elif tp == "slider":      # slider input
         if name == "volume":    # change volume
             smoothVolume(value)
@@ -163,7 +173,7 @@ def command(com):
 #####Sound Functions
 #switch audio inputs
 def switchSound(channel):
-    GF.log("change soundinput to " + channel, 'S')
+    GF.log("change soundinput to " + str(channel), 'S')
     #switch the amplifier input to channel
     IOF.setSoundInput(int(channel)) #this also sets amplifier off if needed
 
@@ -245,6 +255,23 @@ def getRadioText():
             return 'Radio tekst is niet beschikbaar'
     except:
         return "MPC is niet beschibaar"
+
+def startBluetooth():
+    try:
+        temp = str(subprocess.check_output(["sudo", "pactl", "load-module", "module-loopback", "source=bluez_source.C8_D1_0B_E0_1D_B2", "sink=0"], universal_newlines=True, stderr=subprocess.STDOUT)) #hardcoded on my phoneaddress
+        GF.log(temp, "D")
+        settings["bluetooth"][2] = temp
+        GF.log("Bluetooth started no: " + str(settings["bluetooth"][2]),'N')
+    except:
+        GF.log("bt failed","E")
+        applySetting("geluidbron","versterkerUit",'all')
+
+def stopBluetooth():
+    GF.log("killing bluetooth " +str(settings["bluetooth"][2]),"N")
+    try:
+        subprocess.check_output(["sudo", "pactl", "unload-module", str(settings["bluetooth"][2])], universal_newlines=True, stderr=subprocess.STDOUT)
+    except:
+        GF.log("Bluetooth kapot :<","E")
 ############################### Data requests for clients
 def getDataPoints(log,start,end):
     qryEnd = ''
@@ -277,8 +304,6 @@ settings = {}
 #Init the program. If something went wrong, this will run again to restart
 def initDomo():
     GF.log('Starting init','N')
-    #clear mpc audio for a clean start
-    #subprocess.call(["mpc", "clear"])
     #make dictionary from database
     db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
     #  make query
@@ -288,8 +313,6 @@ def initDomo():
     # make settings dict, to use in stead of database
     global settings
     settings = {}
-    #global storeData
-    #storeData = {}
     # fill settings from the database
     results = db.Select(table='settings', columns=columns, condition_and=condition)
     if results is False:
@@ -300,7 +323,26 @@ def initDomo():
             #row[1]#type
             #row[2]#value
             #row[3]#extra
-            settings[row[0]] = [row[1],json.loads(row[2]),row[3]] #list(row[1:4])  # add setting to dictionary
+            GF.log(row, 'N')
+            #if row[2] is not None:
+            #    if (row[2][0] == '[' or row[2][0] == '{'):
+            #        r2 = json.loads(str(row[2]))
+            #    else:
+            #        r2 = json.loads(str(row[2].replace('"',"")))
+            #else:
+            #    r2 = row[2]
+            try:
+                if row[2] is None:
+                    r2 = None
+                else:
+                    try:
+                        r2 = json.loads((row[2].strip('"')))
+                    except:
+                        r2 = json.loads(row[2])
+            except:
+                GF.log(str(row[2])+" could not be decoded",'E')
+
+            settings[row[0]] = [row[1], r2, row[3]] #list(row[1:4])  # add setting to dictionary
 
     GF.log('dict: ' + str(settings), 'D')
     #apply loaded settings for init
@@ -430,19 +472,19 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                         self.sendClient('D:'+data.get('d')+'P:'+points)
 
                     elif type == 'S' and user[1] == 2: #setting
-                        try:
-                            for key, value in data.items():
-                                GF.log(key + ' val: '+str(value), "D")
-                                if value is not None and key != '':
-                                    #self.sendClient("OK")  # message is received, so confirm
-                                    #print('now going to apply:',value,key)
-                                    applySetting(key, value, self)  # apply setting and put in dictionary
-                                else:
-                                    self.sendClient("W Empty setting")
-                                    GF.log("empty message received",'E')
-                        except:  # wrong assumption
-                            GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
-                            self.sendClient("W Not a command or invalid name or type")
+                        #3try: debug
+                        for key, value in data.items():
+                            GF.log(key + ' val: '+str(value), "D")
+                            if value is not None and key != '':
+                                #self.sendClient("OK")  # message is received, so confirm
+                                #print('now going to apply:',value,key)
+                                applySetting(key, value, self)  # apply setting and put in dictionary
+                            else:
+                                self.sendClient("W Empty setting")
+                                GF.log("empty message received",'E')
+                      #  except:  # wrong assumption
+                     #       GF.log('Received message: ' + self.data + '  not a command or invalid name or type','E')
+                     #       self.sendClient("W Not a command or invalid name or type")
 
                     elif type == 'P': #load a page
                         src = '/var/www/'+ data.get('p') + '.txt'
