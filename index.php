@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/html; charset=utf-8');
 	if(!isset($_SESSION)) 
     { 
         session_start(); 
@@ -21,7 +22,7 @@
 		<script type="text/javascript" src="./js/jquery.widget.min.js"></script><!--also for metro ui-->
 		<script type="text/javascript" src="./js/metro-input-control.js"></script>
 
-		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
+		<!--<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />-->
 		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
 <style>
 .button{

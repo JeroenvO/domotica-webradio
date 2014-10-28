@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/html; charset=utf-8');
 	if(!isset($_SESSION)) 
     { 
         session_start(); 
@@ -6,11 +7,12 @@
 
 require 'checkLevel.inc';
 
+
 //get the requested page
 if(isset($_GET['page'])){
-	$pag_nam = mysql_real_escape_string($_GET['page']);
+	$ptl = mysql_real_escape_string($_GET['page']); //page title
 	
-	if($level >=0 && $pag_nam){
+	if($level >=0 && $ptl){
 		
 		/* //slowdown
 		for($i=0;$i<10000;$i++){
@@ -19,7 +21,7 @@ if(isset($_GET['page'])){
 		*/
 
 		//the file used to cache the created page	
-		$file = $pag_nam.".txt";
+		$file = $ptl.".txt";
 
 		//connect to the database
 		require './cons/afdwaka.con'; //also needed for color
@@ -44,11 +46,11 @@ if(isset($_GET['page'])){
 			//check all pages, to make buttons in right top (PageBuTton)
 			while($row_pag=$res_pag->fetch_assoc()){//pages
 				if($row_pag['level'] <= $level){
-					if($row_pag['name'] != $pag_nam){
-						$pbt .= ' <a class="button pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"><i class="icon-'.$row_pag['value'].'"></i> <span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></a> ';
+					if($row_pag['name'] != $ptl){
+						$pbt .= ' <button class="pag-button" id="'.$row_pag['name'].'" title="'.$row_pag['desc'].'"><i class="icon-'.$row_pag['value'].'"></i> <span class="paglinktxt">'.ucfirst($row_pag['desc']).'</span></button> ';
 					}
 					/*else{
-						$pbt = ' <button class="button pag-button" id="'.$pag_nam.'" title="'.$row_pag['desc'].'"><img src="./images/reload-icon-2.png" /></button> '.$pbt;
+						$pbt = ' <button class="button pag-button" id="'.$ptl.'" title="'.$row_pag['desc'].'"><img src="./images/reload-icon-2.png" /></button> '.$pbt;
 					}*/
 				}
 				else{
@@ -56,7 +58,7 @@ if(isset($_GET['page'])){
 				}
 			}
 		
-			$qry_cat = "select * from ".$table." where parent='$pag_nam' order by vlgrd";
+			$qry_cat = "select * from ".$table." where parent='$ptl' order by vlgrd";
 			$res_cat = $db_con->query($qry_cat);
 		
 			if(!$res_cat){
@@ -103,7 +105,7 @@ if(isset($_GET['page'])){
 															</label></div>';
 												break;
 												case 'button':
-													$cnt .='<a class="button input-button" id="'.$row_opt['name'].'" >'.$row_opt['desc'].'</a>';
+													$cnt .='<button class="input-button" id="'.$row_opt['name'].'" >'.$row_opt['desc'].'</button>';
 												break;
 												case 'media': //media controls
 												break;
@@ -134,23 +136,27 @@ if(isset($_GET['page'])){
 					
 												break;
 												case 'color':
-												/*http://www.script-tutorials.com/html5-color-picker-canvas/*/
+													$cnt .= '<canvas class="input-color" id="'.$row_opt['name'].'"></canvas>';
 												break;
 												case 'slider':
-												$cnt .= '	
+												$cnt .= '<span class="input-slider-txt" id="'.$row_opt['name'].'-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'" min="0" max="100">';/*'	
 															<div class="input-slider noUiSlider" id="'.$row_opt['name'].'""></div>
 															<span class="input-slider" id="'.$row_opt['name'].'-txt"></span>
-														';
+														';*/
 												break;
 												case 'time':
+														$cnt .= '
+														<button class="input-time-btn" id="'.$row_opt['name'].'-btn">Not set</button>
+														<canvas width="320" height="320" class="input-time" id="'.$row_opt['name'].'"></canvas>';
 														/*
 															The code for the plugin: 
 														*/
-															$cnt .= '<input type="number" value="" class="input-time" id="'.$row_opt['name'].'" />
+														
+														/*	$cnt .= '<input type="number" value="" class="input-time" id="'.$row_opt['name'].'" />
 															Ingesteld op: <span class="input-time" id="'.$row_opt['name'].'-txt"></span>
 															
 															';
-
+*/
 												/*for($h=0;$h<24;$h++){
 													$cnt .='<input id="'.$row_opt['name'].'" class="input-time" name="scroller" />';
 												}
@@ -191,10 +197,11 @@ if(isset($_GET['page'])){
 												break;
 												case 'graph':
 													$cnt .='
-													<button class="graph-btn-4hour" id="'.$row_opt['name'].'">4 uur</button> 
-													<button class="graph-btn-day" id="'.$row_opt['name'].'">dag</button> 
-													<button class="graph-btn-week" id="'.$row_opt['name'].'">week</button> 
-													<button class="graph-btn-month" id="'.$row_opt['name'].'">maand</button> 
+													<button class="graph-btn-4hour" id="'.$row_opt['name'].'-4h">4 uur</button> 
+													<button class="graph-btn-day" id="'.$row_opt['name'].'-dy">dag</button> 
+													<button class="graph-btn-week" id="'.$row_opt['name'].'-wk">week</button> 
+													<button class="graph-btn-month" id="'.$row_opt['name'].'-mn">maand</button> 
+													<button class="graph-btn-year" id="'.$row_opt['name'].'-yr">jaar</button> 
 													<div class="graph" id="'.$row_opt['name'].'" style="display:block; width:auto; height:400px; "></div>';
 												break;
 												case 'table_users':
@@ -249,7 +256,13 @@ if(isset($_GET['page'])){
 				$res_cat->close(); //end of db operations
 			
 				//make json from the created vars
-				$json_array =  json_encode(array( 'pbt' => $pbt, 'cbt' => $cbt, 'cnt' => $cnt, 'nmct' => $i, 'color' => $colorRGB ));
+				//remove tabs
+				$pbt = trim(preg_replace('/\t+/', '', $pbt));
+				$cbt = trim(preg_replace('/\t+/', '', $cbt));
+				$cnt = trim(preg_replace('/\t+/', '', $cnt));
+				$cnt = trim(preg_replace('/\n+/', '', $cnt));
+				$cnt = trim(preg_replace('/\r+/', '', $cnt));
+				$json_array =  json_encode(array( 'ptl' => $ptl, 'pbt' => $pbt, 'cbt' => $cbt, 'cnt' => $cnt, 'nmct' => $i, 'color' => $colorRGB ));
 				//store json in file for later use, cache
 				$handle = fopen($file, 'w') or die("can't open file");
 				fwrite($handle, $json_array);
