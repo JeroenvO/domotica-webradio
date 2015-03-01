@@ -21,13 +21,27 @@ import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 GF = GFunc.GFunc()
+def setSunlight(time):
+    x = 0;
+    while x <= 100:
+        send(json.dumps({'llksunrise' : x}))
+        x+=1
+        sleep(time/10.0)
 
 # start an alarm, alarmNum = 1,2,3 or 4
 def startAlarm(alarmNum,):
     #start alarm
     GF.log("Alarm " + str(alarmNum) + " turning on now", 'N')
+
     print(json.dumps({'volume' : settings['a' + alarmNum + '_alarmVol'][1], 'geluidbron' : 'Raspberry'}))
     send(json.dumps({'volume' : settings['a' + alarmNum + '_alarmVol'][1], 'geluidbron' : 'Raspberry'}))
+    try:
+        x = settings['a'+alarmNum+'_alarmLight'][1]
+        if x != 0:
+            send(json.dumps({'llksunrise' : 0,'ledlampAanUit' : True}))
+            setSunlight(x)
+    except:
+        x = 0
 
 
 # check alarms
