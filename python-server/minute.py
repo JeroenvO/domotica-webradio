@@ -6,7 +6,7 @@ __author__ = 'JvO'
 #Jeroen van Oorschot 2014
 #Functions that run every minute like alarms and timers
 
-import GFunc
+#import GFunc
 
 import PyDatabase
 #date and time
@@ -20,7 +20,7 @@ import socket
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-GF = GFunc.GFunc()
+#GF = GFunc.GFunc()
 def setSunlight(time):
     x = 0;
     while x <= 100:

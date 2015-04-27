@@ -1,0 +1,212 @@
+error: Connection refused
+error: Connection refused
+error: Connection refused
+error: Connection refused
+error: Connection refused
+error: Connection refused
+Raspberry PI Domotica JvO
+[2014-10-30 07:06] [D] writing Raspberry PI JvODomotica initing to lcd
+[2014-10-30 07:06] [N] Starting in 5 seconds...
+[2014-10-30 07:07] [N] Starting!
+[2014-10-30 07:07] [N] init: Starting
+Error connecting to MYSQL, retrying
+[2014-10-30 07:07] [N] init: ('bureaulamp', 'tf', 'false', '92')
+[2014-10-30 07:07] [N] init: ('ledlampAanUit', 'tf', 'false', '94')
+[2014-10-30 07:07] [N] init: ('computer', 'tf', 'true', '93')
+[2014-10-30 07:07] [N] init: ('radiostation', 'list', '"radioveronica"', None)
+[2014-10-30 07:07] [N] init: ('radio538', 'listitem', '"http://vip-icecast.538.lw.triple-it.nl/RADIO538_MP3.m3u"', None)
+[2014-10-30 07:07] [N] init: ('3fm', 'listitem', '"http://icecast.omroep.nl/3fm-bb-mp3"', None)
+[2014-10-30 07:07] [N] init: ('volume', 'slider', '"14"', None)
+[2014-10-30 07:07] [N] init: ('geluidbron', 'list', '"Raspberry"', None)
+[2014-10-30 07:07] [N] init: ('Raspberry', 'listitem', '3', None)
+[2014-10-30 07:07] [N] init: ('boomboom', 'listitem', '2', None)
+[2014-10-30 07:07] [N] init: ('snoer', 'listitem', '1', None)
+[2014-10-30 07:07] [N] init: ('gebruikers_login_log_table', 'table_logs_users', None, None)
+[2014-10-30 07:07] [N] init: ('gebruikers_overzicht_table', 'table_users', None, None)
+[2014-10-30 07:07] [N] init: ('CPUTemp', 'graph', None, None)
+[2014-10-30 07:07] [N] init: ('Q-music', 'listitem', '"http://vip2.str.reasonnet.com/qmusic.mp3.96"', None)
+[2014-10-30 07:07] [N] init: ('slamfm', 'listitem', '"http://82.201.100.10:8000/SLAMFM_MP3_HQ"', None)
+[2014-10-30 07:07] [N] init: ('538nonstop40', 'listitem', '"http://vip-icecast.538.lw.triple-it.nl/WEB02_MP3.m3u"', None)
+[2014-10-30 07:07] [N] init: ('radio4', 'listitem', '"http://icecast.omroep.nl/radio4-bb-mp3"', None)
+[2014-10-30 07:07] [N] init: ('radioveronica', 'listitem', '"http://8503.live.streamtheworld.com:80/VERONICA_SC"', None)
+[2014-10-30 07:07] [N] init: ('home_temp', 'graph', None, None)
+[2014-10-30 07:07] [N] init: ('home_hum', 'graph', None, None)
+[2014-10-30 07:07] [N] init: ('ledLampKleur', 'color', '[0.47376740328019457, 0.3424926646833687, 0.75]', None)
+[2014-10-30 07:07] [N] init: ('versterkerUit', 'listitem', '0', None)
+[2014-10-30 07:07] [N] init: ('soundSleepTimer', 'time', '"0:00"', None)
+[2014-10-30 07:07] [N] init: ('radioText', 'value', '"Duran Duran - The Reflex"', None)
+[2014-10-30 07:07] [N] init: ('a1_alarmOn', 'tf', 'true', None)
+[2014-10-30 07:07] [N] init: ('a1_alarmTime', 'time', '"6:05"', None)
+[2014-10-30 07:07] [N] init: ('a1_alarmVol', 'slider', '"11"', None)
+[2014-10-30 07:07] [N] init: ('a2_alarmOn', 'tf', 'true', None)
+[2014-10-30 07:07] [N] init: ('a2_alarmTime', 'time', '"7:07"', None)
+[2014-10-30 07:07] [N] init: ('a2_alarmVol', 'slider', '17', None)
+[2014-10-30 07:07] [N] init: ('a3_alarmOn', 'tf', 'false', None)
+[2014-10-30 07:07] [N] init: ('a3_alarmTime', 'time', '"8:30"', None)
+[2014-10-30 07:07] [N] init: ('a3_alarmVol', 'slider', '13', None)
+[2014-10-30 07:07] [N] init: ('a4_alarmOn', 'tf', 'true', None)
+[2014-10-30 07:07] [N] init: ('a4_alarmTime', 'time', '"6:57"', None)
+[2014-10-30 07:07] [N] init: ('a4_alarmVol', 'slider', '"12"', None)
+[2014-10-30 07:07] [N] init: ('a1_alarmDays', 'dayPicker', '"tttttff"', None)
+[2014-10-30 07:07] [N] init: ('a2_alarmDays', 'dayPicker', '"tttttff"', None)
+[2014-10-30 07:07] [N] init: ('a3_alarmDays', 'dayPicker', '"fffffff"', None)
+[2014-10-30 07:07] [N] init: ('a4_alarmDays', 'dayPicker', '"fffffff"', None)
+[2014-10-30 07:07] [N] init: ('skipAds', 'tf', 'true', None)
+[2014-10-30 07:07] [N] init: ('Swr3', 'listitem', '"http://mp3-live.swr3.de/swr3_m.m3u"', None)
+[2014-10-30 07:07] [N] init: ('radiostationTemp', 'value', '"3fm"', None)
+[2014-10-30 07:07] [N] init: ('reboot', 'button', '"reboot"', None)
+[2014-10-30 07:07] [N] init: ('poweroff', 'button', '"poweroff"', None)
+[2014-10-30 07:07] [N] init: ('bluetooth', 'listitem', '3', None)
+[2014-10-30 07:07] [N] init: ('stubru', 'listitem', '"http://mp3.streampower.be/stubru-high.mp3"', None)
+[2014-10-30 07:07] [N] init: ('reinit', 'button', '"reinit"', None)
+[2014-10-30 07:07] [D] init: dictionary: {'a4_alarmDays': ['dayPicker', 'fffffff', None], 'slamfm': ['listitem', 'http://82.201.100.10:8000/SLAMFM_MP3_HQ', None], 'snoer': ['listitem', 1, None], 'home_hum': ['graph', None, None], 'reinit': ['button', 'reinit', None], 'ledlampAanUit': ['tf', False, '94'], 'radiostation': ['list', 'radioveronica', None], 'radiostationTemp': ['value', '3fm', None], 'poweroff': ['button', 'poweroff', None], 'computer': ['tf', True, '93'], 'a1_alarmDays': ['dayPicker', 'tttttff', None], 'radioveronica': ['listitem', 'http://8503.live.streamtheworld.com:80/VERONICA_SC', None], 'a2_alarmOn': ['tf', True, None], 'a1_alarmTime': ['time', '6:05', None], 'versterkerUit': ['listitem', 0, None], 'reboot': ['button', 'reboot', None], 'a1_alarmOn': ['tf', True, None], 'a3_alarmOn': ['tf', False, None], 'boomboom': ['listitem', 2, None], 'skipAds': ['tf', True, None], 'CPUTemp': ['graph', None, None], 'a1_alarmVol': ['slider', 11, None], 'stubru': ['listitem', 'http://mp3.streampower.be/stubru-high.mp3', None], 'Raspberry': ['listitem', 3, None], 'a3_alarmTime': ['time', '8:30', None], 'radio4': ['listitem', 'http://icecast.omroep.nl/radio4-bb-mp3', None], 'Q-music': ['listitem', 'http://vip2.str.reasonnet.com/qmusic.mp3.96', None], 'gebruikers_login_log_table': ['table_logs_users', None, None], 'a4_alarmVol': ['slider', 12, None], 'ledLampKleur': ['color', [0.47376740328019457, 0.3424926646833687, 0.75], None], 'a3_alarmVol': ['slider', 13, None], 'a3_alarmDays': ['dayPicker', 'fffffff', None], 'volume': ['slider', 14, None], 'home_temp': ['graph', None, None], 'bluetooth': ['listitem', 3, None], '538nonstop40': ['listitem', 'http://vip-icecast.538.lw.triple-it.nl/WEB02_MP3.m3u', None], 'soundSleepTimer': ['time', '0:00', None], 'a2_alarmVol': ['slider', 17, None], 'a4_alarmTime': ['time', '6:57', None], 'geluidbron': ['list', 'Raspberry', None], 'radioText': ['value', 'Duran Duran - The Reflex', None], 'a2_alarmTime': ['time', '7:07', None], 'a2_alarmDays': ['dayPicker', 'tttttff', None], 'a4_alarmOn': ['tf', True, None], 'gebruikers_overzicht_table': ['table_users', None, None], 'radio538': ['listitem', 'http://vip-icecast.538.lw.triple-it.nl/RADIO538_MP3.m3u', None], 'bureaulamp': ['tf', False, '92'], '3fm': ['listitem', 'http://icecast.omroep.nl/3fm-bb-mp3', None], 'Swr3': ['listitem', 'http://mp3-live.swr3.de/swr3_m.m3u', None]}
+[2014-10-30 07:07] [N] applySetting: setting "a4_alarmDays" to "fffffff"
+[2014-10-30 07:07] [N] applySetting: setting "slamfm" to "http://82.201.100.10:8000/SLAMFM_MP3_HQ"
+[2014-10-30 07:07] [N] applySetting: setting "snoer" to "1"
+[2014-10-30 07:07] [N] applySetting: setting "home_hum" to "None"
+[2014-10-30 07:07] [E] applySetting: invalid arguments: [ name: home_hum ; value: None ] supplied
+[2014-10-30 07:07] [N] applySetting: setting "reinit" to "reinit"
+[2014-10-30 07:07] [N] applySetting: setting "ledlampAanUit" to "False"
+[2014-10-30 07:07] [S] tf switch 94 to 0
+[2014-10-30 07:07] [N] applySetting: setting "radiostation" to "radioveronica"
+[2014-10-30 07:07] [N] applySetting: setting "geluidbron" to "Raspberry"
+[2014-10-30 07:07] [S] change soundinput to 3
+[2014-10-30 07:07] [S] tf switch 95 to 1
+[2014-10-30 07:07] [D] writing src= Raspberry to lcd
+[2014-10-30 07:07] [S] change volume to 0
+[2014-10-30 07:07] [N] applySetting: setting "radioText" to "MPC is niet beschibaar"
+[2014-10-30 07:07] [E] applySetting: Unable to send setting to others
+[2014-10-30 07:07] [S] change volume to 14
+[2014-10-30 07:07] [E] applySetting: Unable to send setting to others
+[2014-10-30 07:07] [S] radio started: http://8503.live.streamtheworld.com:80/VERONICA_SC
+[2014-10-30 07:07] [N] applySetting: setting "radioText" to "MPC is niet beschibaar"
+[2014-10-30 07:07] [E] applySetting: Unable to send setting to others
+[2014-10-30 07:07] [N] applySetting: setting "radiostationTemp" to "3fm"
+[2014-10-30 07:07] [N] applySetting: setting "poweroff" to "poweroff"
+[2014-10-30 07:07] [N] applySetting: setting "computer" to "True"
+[2014-10-30 07:07] [S] tf switch 93 to 1
+[2014-10-30 07:07] [N] applySetting: setting "a1_alarmDays" to "tttttff"error: Connection refused
+error: Connection refused
+error: Connection refused
+error: Connection refused
+
+[2014-10-30 07:07] [N] applySetting: setting "radioveronica" to "http://8503.live.streamtheworld.com:80/VERONICA_SC"
+[2014-10-30 07:07] [N] applySetting: setting "a2_alarmOn" to "True"
+[2014-10-30 07:07] [N] applySetting: setting "a1_alarmTime" to "6:05"
+[2014-10-30 07:07] [N] applySetting: setting "versterkerUit" to "0"
+[2014-10-30 07:07] [N] applySetting: setting "reboot" to "reboot"
+[2014-10-30 07:07] [N] applySetting: setting "a1_alarmOn" to "True"
+[2014-10-30 07:07] [N] applySetting: setting "a3_alarmOn" to "False"
+[2014-10-30 07:07] [N] applySetting: setting "boomboom" to "2"
+[2014-10-30 07:07] [N] applySetting: setting "skipAds" to "True"
+[2014-10-30 07:07] [N] applySetting: setting "radiostationTemp" to "radioveronica"
+[2014-10-30 07:07] [E] applySetting: Unable to send setting to others
+[2014-10-30 07:07] [N] applySetting: setting "CPUTemp" to "None"
+[2014-10-30 07:07] [E] applySetting: invalid arguments: [ name: CPUTemp ; value: None ] supplied
+[2014-10-30 07:07] [N] applySetting: setting "a1_alarmVol" to "11"
+[2014-10-30 07:07] [N] applySetting: setting "stubru" to "http://mp3.streampower.be/stubru-high.mp3"
+[2014-10-30 07:07] [N] applySetting: setting "Raspberry" to "3"
+[2014-10-30 07:07] [N] applySetting: setting "a3_alarmTime" to "8:30"
+[2014-10-30 07:07] [N] applySetting: setting "radio4" to "http://icecast.omroep.nl/radio4-bb-mp3"
+[2014-10-30 07:07] [N] applySetting: setting "Q-music" to "http://vip2.str.reasonnet.com/qmusic.mp3.96"
+[2014-10-30 07:07] [N] applySetting: setting "gebruikers_login_log_table" to "None"
+[2014-10-30 07:07] [E] applySetting: invalid arguments: [ name: gebruikers_login_log_table ; value: None ] supplied
+[2014-10-30 07:07] [N] applySetting: setting "a4_alarmVol" to "12"
+[2014-10-30 07:07] [N] applySetting: setting "ledLampKleur" to "[0.47376740328019457, 0.3424926646833687, 0.75]"
+[2014-10-30 07:07] [N] applySetting: setting "a3_alarmVol" to "13"
+[2014-10-30 07:07] [N] applySetting: setting "a3_alarmDays" to "fffffff"
+[2014-10-30 07:07] [N] applySetting: setting "volume" to "14"
+[2014-10-30 07:07] [S] change volume to 14
+[2014-10-30 07:07] [N] applySetting: setting "home_temp" to "None"
+[2014-10-30 07:07] [E] applySetting: invalid arguments: [ name: home_temp ; value: None ] supplied
+[2014-10-30 07:07] [N] applySetting: setting "bluetooth" to "3"
+[2014-10-30 07:07] [N] applySetting: setting "538nonstop40" to "http://vip-icecast.538.lw.triple-it.nl/WEB02_MP3.m3u"
+[2014-10-30 07:07] [N] applySetting: setting "soundSleepTimer" to "0:00"
+[2014-10-30 07:07] [N] applySetting: setting "a2_alarmVol" to "17"
+[2014-10-30 07:07] [N] applySetting: setting "a4_alarmTime" to "6:57"
+[2014-10-30 07:07] [N] applySetting: setting "geluidbron" to "Raspberry"
+[2014-10-30 07:07] [S] change soundinput to 3
+[2014-10-30 07:07] [S] tf switch 95 to 1
+[2014-10-30 07:07] [D] writing src= Raspberry to lcd
+[2014-10-30 07:07] [S] change volume to 0
+[2014-10-30 07:07] [N] applySetting: setting "radioText" to "MPC is niet beschibaar"
+[2014-10-30 07:07] [E] applySetting: Unable to send setting to others
+[2014-10-30 07:07] [S] change volume to 14
+[2014-10-30 07:07] [N] applySetting: setting "radioText" to "MPC is niet beschibaar"
+[2014-10-30 07:07] [N] applySetting: setting "a2_alarmTime" to "7:07"
+[2014-10-30 07:07] [N] applySetting: setting "a2_alarmDays" to "tttttff"
+[2014-10-30 07:07] [N] applySetting: setting "a4_alarmOn" to "True"
+[2014-10-30 07:07] [N] applySetting: setting "gebruikers_overzicht_table" to "None"
+[2014-10-30 07:07] [E] applySetting: invalid arguments: [ name: gebruikers_overzicht_table ; value: None ] supplied
+[2014-10-30 07:07] [N] applySetting: setting "radio538" to "http://vip-icecast.538.lw.triple-it.nl/RADIO538_MP3.m3u"
+[2014-10-30 07:07] [N] applySetting: setting "bureaulamp" to "False"
+[2014-10-30 07:07] [S] tf switch 92 to 0
+[2014-10-30 07:07] [N] applySetting: setting "3fm" to "http://icecast.omroep.nl/3fm-bb-mp3"
+[2014-10-30 07:07] [N] applySetting: setting "Swr3" to "http://mp3-live.swr3.de/swr3_m.m3u"
+[2014-10-30 07:07] [N] init: completed, starting now!
+[2014-10-30 07:07] [N] Jeroen van Oorschot, domotica-webradio 2013-2015
+[2014-10-30 07:07] [N] host: 192.168.1.104:600
+[2014-10-30 07:07] [N] main: starting server ...
+[2014-10-30 07:07] [N] main: Server loop running, waiting for connections ...
+[2014-10-30 07:07] [N] applySetting: setting "radioText" to "U2 - I Still Haven't Found What I'm Looking For"
+[2014-10-30 07:07] [D] writing U2 - I Still Haven't Found What  to lcd
+[2014-10-30 07:08] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45698)
+----------------------------------------
+[2014-10-30 07:09] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45720)
+----------------------------------------
+[2014-10-30 07:10] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45743)
+----------------------------------------
+[2014-10-30 07:10] [N] applySetting: setting "radioText" to "Anouk - Girl"
+[2014-10-30 07:10] [D] writing Anouk - Girl to lcd
+[2014-10-30 07:11] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45766)
+----------------------------------------
+[2014-10-30 07:12] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45788)
+----------------------------------------
+[2014-10-30 07:13] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45811)
+----------------------------------------
+[2014-10-30 07:14] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45834)
+----------------------------------------
+[2014-10-30 07:15] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45857)
+----------------------------------------
+[2014-10-30 07:16] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45879)
+----------------------------------------
+[2014-10-30 07:17] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45902)
+----------------------------------------
+[2014-10-30 07:17] [N] applySetting: setting "radioText" to "Crash Test Dummies - Mmm Mmm Mmm Mmm"
+[2014-10-30 07:17] [D] writing Crash Test Dummies - Mmm Mmm Mmm to lcd
+[2014-10-30 07:18] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45925)
+----------------------------------------
+[2014-10-30 07:19] [N] server: User: minute trying to login from: 192.168.1.104
+----------------------------------------
+Exception happened during processing of request from ('192.168.1.104', 45947)
+----------------------------------------
+[2014-10-30 07:19] [N] server: User: local trying to login from: 192.168.1.101
+[2014-10-30 07:19] [N] server: Local user accepted
+[2014-10-30 07:19] [N] server: User: local trying to login from: 192.168.1.102
+[2014-10-30 07:19] [N] server: Local user accepted
+[2014-10-30 07:19] [N] server: user local send message: P{"p":"bediening"}
+[2014-10-30 07:19] [N] server: user local send message: R{"p":"bediening"}
+[2014-10-30 07:19] [N] server: client local requested value update
+[2014-10-30 07:20] [N] server: user local send message: P{"p":"bediening"}

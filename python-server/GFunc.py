@@ -7,9 +7,10 @@ __author__ = 'JvO'
 import time
 from time import sleep
 import datetime
-#import PyDatabase
 import struct
 
+#Class of general functions used in control.py, logging.py and minute.py
+#Handles database login and contains the websocket-python code.
 
 
 class GFunc():

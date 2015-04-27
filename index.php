@@ -22,7 +22,7 @@ header('Content-Type: text/html; charset=utf-8');
 		<script type="text/javascript" src="./js/jquery.widget.min.js"></script><!--also for metro ui-->
 		<script type="text/javascript" src="./js/metro-input-control.js"></script>
 
-		<!--<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />-->
+		<link type="text/css" rel="stylesheet" href="./css/opmaak.css" />
 		<link href="./css/metro-bootstrap.css" rel="stylesheet" />
 <style>
 .button{
@@ -99,8 +99,9 @@ header('Content-Type: text/html; charset=utf-8');
 					if($level >= 0){ //if valid user, if local or if logged in
 						echo '<a href="control.php" class="button" title="ga verder">Ga naar control</a>';
 						if($level > 1 && $local){ //show extra buttons if level is 2
-					/*		echo '<br /><br /><a class="button" onClick="command(\'shutdown\')" title="Raspberry uitschakelen">Raspberry uitschakelen</a>';
-							echo '<br /><a class="button" onClick="command(\'reboot\')" title="Raspberry herstarten">Raspberry herstarten</a>';*/
+							echo '<br /><br /><a class="button" href="http://192.168.1.104/loadPage.php?page=bediening&noCache=true" target="_blank" title="Reinit bediening">Reinit bediening</a>';
+							echo '<br /><a class="button" href="http://192.168.1.104/loadPage.php?page=logboeken&noCache=true" target="_blank" title="Reinit logboeken">Reinit logboeken</a>';
+							echo '<br /><a class="button" href="http://192.168.1.104/loadPage.php?page=gebruikers&noCache=true" target="_blank" title="Reinit gebruikers">Reinit gebruikers</a>';
 							echo '<br /><a href="http://192.168.1.104/phpmyadmin">PhpMyAdmin</a>'; 
 							 
 							echo '<br /><a href="http://88.159.88.53">Bekijk website extern</a>'; 

@@ -138,6 +138,14 @@ if(isset($_GET['page'])){
 												case 'color':
 													$cnt .= '<canvas class="input-color" id="'.$row_opt['name'].'"></canvas>';
 												break;
+												case 'colorRGB':
+												//dit deel is niet af
+													$cnt .= '
+													<span class="input-slider-red-txt" id="'.$row_opt['name'].'-red-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'"-red" style="-ms-fill-lower{background-color:red}" min="0" max="100">
+													<span class="input-slider-green-txt" id="'.$row_opt['name'].'-green-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'-green" style="-ms-fill-lower{background-color:green}" min="0" max="100">
+													<span class="input-slider-blue-txt" id="'.$row_opt['name'].'-blue-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'-blue" min="0" max="100">
+													';
+												break;
 												case 'slider':
 												$cnt .= '<span class="input-slider-txt" id="'.$row_opt['name'].'-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'" min="0" max="100">';/*'	
 															<div class="input-slider noUiSlider" id="'.$row_opt['name'].'""></div>
@@ -262,7 +270,7 @@ if(isset($_GET['page'])){
 				$cnt = trim(preg_replace('/\t+/', '', $cnt));
 				$cnt = trim(preg_replace('/\n+/', '', $cnt));
 				$cnt = trim(preg_replace('/\r+/', '', $cnt));
-				$json_array =  json_encode(array( 'ptl' => $ptl, 'pbt' => $pbt, 'cbt' => $cbt, 'cnt' => $cnt, 'nmct' => $i, 'color' => $colorRGB ));
+				$json_array =  json_encode(array( 'ptl' => $ptl, 'pbt' => $pbt, 'cbt' => $cbt, 'cnt' => $cnt, 'nmct' => $i ));
 				//store json in file for later use, cache
 				$handle = fopen($file, 'w') or die("can't open file");
 				fwrite($handle, $json_array);
@@ -272,11 +280,12 @@ if(isset($_GET['page'])){
 
 		}else{ //give array from cache
 			if(file_exists($file)){
-				$array = json_decode(file_get_contents($file), true);
+				//$array = json_decode(file_get_contents($file), true);
 				//decode the array to update the color setting
-				$array['color'] = $colorRGB;
+				//$array['color'] = $colorRGB;
 				//echo the json array so javascript can use it.
-				echo json_encode($array);
+				//echo json_encode($array);
+				echo file_get_contents($file);
 			}else{
 				echo json_encode(array( 'pbt' => '', 'cbt' => '', 'cnt' => 'cache file not available', 'nmct' => '1', 'color' => '' ));;
 			}

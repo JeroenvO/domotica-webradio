@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="scrollto.js" server="192.168.1.104//var/www/" local="130432654396725954" remote="130432654200000000" Dst="2" />
-<file name="GFunc.js" server="192.168.1.104//var/www/" local="130569226142382150" remote="130569225600000000" Dst="2" />
+<file name="scrollto.js" server="192.168.1.104//var/www/" local="130432654396725954" remote="130590766800000000" Dst="1" />
+<file name="GFunc.js" server="192.168.1.104//var/www/" local="130745493383026301" remote="130745493000000000" Dst="2" />
 <file name="jquery.nouislider.js" server="192.168.1.104//var/www/" local="130432654043614186" remote="130432653600000000" Dst="2" />
-<file name="jquery.widget.min.js" server="192.168.1.104//var/www/" local="130308375868254377" remote="130569226200000000" Dst="2" />
-<file name="jquery-2.0.3.min.js" server="192.168.1.104//var/www/" local="130308377860091615" remote="130408959000000000" Dst="2" />
-<file name="jquery.flot.js" server="192.168.1.104//var/www/" local="130432653431669630" remote="130432653000000000" Dst="2" />
-<file name="jquery.flot.time.js" server="192.168.1.104//var/www/" local="130432653513326891" remote="130432653600000000" Dst="2" />
+<file name="jquery.widget.min.js" server="192.168.1.104//var/www/" local="130308375868254377" remote="130569226200000000" Dst="1" />
+<file name="jquery-2.0.3.min.js" server="192.168.1.104//var/www/" local="130308377860091615" remote="130618140000000000" Dst="1" />
+<file name="jquery.flot.js" server="192.168.1.104//var/www/" local="130432653431669630" remote="130590766800000000" Dst="1" />
+<file name="jquery.flot.time.js" server="192.168.1.104//var/www/" local="130432653513326891" remote="130590766800000000" Dst="1" />
 <file name="jquery.bpopup.js" server="192.168.1.104//var/www/" local="130423761095268583" remote="130428426600000000" Dst="2" />
-<file name="jquery.timepicker.js" server="192.168.1.104//var/www/" local="130428888221931467" remote="130428891000000000" Dst="2" />
+<file name="jquery.timepicker.js" server="192.168.1.104//var/www/" local="130428888221931467" remote="130590766800000000" Dst="1" />
 <file name="flot.jquery.json" server="192.168.1.104//var/www/" local="130425767747468836" remote="130432426800000000" Dst="2" />
 <file name="jquery.colorhelpers.js" server="192.168.1.104//var/www/" local="130425767747630505" remote="130432426800000000" Dst="2" />
 <file name="jquery.flot.canvas.js" server="192.168.1.104//var/www/" local="130425767747670527" remote="130432426800000000" Dst="2" />
@@ -20,13 +20,14 @@
 <file name="jquery.flot.symbol.js" server="192.168.1.104//var/www/" local="130425767748611165" remote="130432426800000000" Dst="2" />
 <file name="jquery.flot.threshold.js" server="192.168.1.104//var/www/" local="130425767748651196" remote="130432426800000000" Dst="2" />
 <file name="PLUGINS.md" server="192.168.1.104//var/www/" local="130425767743429084" remote="130432426800000000" Dst="2" />
-<file name="jquery-2.1.0.min.js" server="192.168.1.104//var/www/" local="130434313969812325" remote="130434315000000000" Dst="2" />
+<file name="jquery-2.1.0.min.js" server="192.168.1.104//var/www/" local="130434313969812325" remote="130434315000000000" Dst="1" />
 <file name="timePicker.min.js" server="192.168.1.104//var/www/" local="130589008533189177" remote="130589008200000000" Dst="1" />
-<file name="metro-core.js" server="192.168.1.104//var/www/" local="130308375878987229" remote="130459971600000000" Dst="2" />
-<file name="metro-touch-handler.js" server="192.168.1.104//var/www/" local="130308375882050342" remote="130459971600000000" Dst="2" />
-<file name="metro-button-set.js" server="192.168.1.104//var/www/" local="130308375878586958" remote="130459971600000000" Dst="2" />
-<file name="metro-input-control.js" server="192.168.1.104//var/www/" local="130308375880047959" remote="130459971600000000" Dst="2" />
-<file name="jquery.bpopup.min.js" server="192.168.1.104//var/www/" local="130459975056961572" remote="130459975200000000" Dst="2" />
+<file name="metro-core.js" server="192.168.1.104//var/www/" local="130308375878987229" remote="130459971600000000" Dst="1" />
+<file name="metro-touch-handler.js" server="192.168.1.104//var/www/" local="130308375882050342" remote="130459971600000000" Dst="1" />
+<file name="metro-button-set.js" server="192.168.1.104//var/www/" local="130308375878586958" remote="130459971600000000" Dst="1" />
+<file name="metro-input-control.js" server="192.168.1.104//var/www/" local="130308375880047959" remote="130618140000000000" Dst="1" />
+<file name="jquery.bpopup.min.js" server="192.168.1.104//var/www/" local="130459975056961572" remote="130459975200000000" Dst="1" />
 <file name="colorPicker.min.js" server="192.168.1.104//var/www/" local="130589008667943591" remote="130589008200000000" Dst="1" />
-<file name="jquery.colorpicker.js" server="192.168.1.104//var/www/" local="130459475835939121" remote="130460008200000000" Dst="2" />
+<file name="jquery.colorpicker.js" server="192.168.1.104//var/www/" local="130459475835939121" remote="130460008200000000" Dst="1" />
+<file name="jquery-2.1.1.min.js" server="192.168.1.104//var/www/" local="130590864342467578" remote="130590945600000000" Dst="1" />
 </dwsync>

@@ -25,6 +25,12 @@ else{//login
 		if(isset($usernm) && ($usernm == 'local' || $usernm == 'localguest')){ //don't allow these usernames
 			$usernm = '';
 		}
+		//log a try to login
+		$query = "insert into logs_users (username, location, level) values ('$usernm','$ip',-1)";
+					if(!$resultaat = $db_con->query($query)){
+						echo ('Fout in query: '.$db_con->error); 
+						exit();
+					}
 		$password = md5(mysql_real_escape_string(strip_tags($_POST['wachtwoord'])).$salt);
 		$query = "SELECT pwdhash, level, fullname FROM users WHERE usernm='$usernm'";
 		if(!$resultaat = $db_con->query($query)) trigger_error('Fout in query: '.$db_con->error); 
@@ -44,6 +50,7 @@ else{//login
 					$_SESSION['LAST_ACTIVITY'] = time();
 					$_SESSION['HTTP_USER_AGENT'] = $_SERVER['HTTP_USER_AGENT'];
 					$_SESSION['pwdhash'] = $password;
+					//log a succesfull login
 					$query = "insert into logs_users (username, location, level) values ('$usernm','$ip','$level')";
 					if(!$resultaat = $db_con->query($query)){
 						echo ('Fout in query: '.$db_con->error); 

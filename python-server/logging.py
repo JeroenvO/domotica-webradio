@@ -18,20 +18,23 @@ wp.mcp23017Setup(64,0x20)#initialize expander, needed for output pin 66 for smar
 wp.pinMode(66,1)
 wp.digitalWrite(66,0)
 
-#####GPIO Functions
-#set output
+
+##//////////////////////////////##
+##|||||Output helper func|||||||##
+##\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\##
+
 def setOutput(pin, value):
     print ("set " + pin + " to " + value)
     #set gpio
 
 
-########LOG FUNCTIONS
+##//////////////////////////////##
+##||||||LOG FUNCTIONS|||||||||||##
+##\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\##
+
 #write a value in a log
 def writeLog(table,values):
     db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"], db=GF.DBLogin["db"])
-    #create connection and cursor
-    # cursor.execute("INSERT INTO "+table+" (value, timestamp) VALUES ('"+value+"', NOW())")
-
     if not db.Insert(table=table, values=values):
         print("Could not execute query: " + db.query)
 
@@ -42,7 +45,6 @@ def logCPUTemp():
     proc = str(subprocess.check_output(["/opt/vc/bin/vcgencmd", "measure_temp"], universal_newlines=True, stderr=subprocess.STDOUT))
     temp = proc[5:7]
     writeLog("log_hwrpi", {"cpu_temp": temp})
-#    writeLog("log_CPUTemp",temp)
 
 #dht11 temp/hum logger
 def logDHT11():
@@ -50,12 +52,10 @@ def logDHT11():
     hum = proc[2:6]
     temp = proc[9:13]
     writeLog("log_environment", {'home_temp': temp, 'home_hum': hum})
-    #overbodig nu.
- #   writeLog("log_home_temp", temp)
- #   writeLog("log_home_hum", hum)
 
 #read slimme meter: credits to http://gejanssen.com/howto/Slimme-meter-uitlezen/index.html
 def logSmartMeter():
+    #set smart meter to send data
     wp.digitalWrite(66,1)
     #Set COM port config
     ser = serial.Serial()
@@ -67,47 +67,52 @@ def logSmartMeter():
     ser.rtscts=0
     ser.timeout=20
     ser.port="/dev/ttyAMA0"
+    #open port
     try:
-        GF.log("poort open",'D')
-        GF.log("poort open",'D')
+        GF.log("poort open",'N')
         ser.open()
     except:
-        GF.log("ser open gefaald",'E')
+        GF.log("ser open failed",'E')
+    #read all 20 lines of data
     for i in range(0,20):
         line=''
-        #Read 1 line van de seriele poort
+        #Read 1 line of serial port
         try:
             line = ser.readline()
             GF.log(line+'\n','D')
         except:
             GF.log("Seriële poort kan niet gelezen worden",'e')
         line=str(line).strip()[2:]
-
-#        GF.log(line,'d')
-
+        #switch statement to extract information from data
+        #electricity low
         if line[0:9] == "1-0:1.8.1":
             elec_low = str(int(line[10:15]))
             print("daldag     ", elec_low , "kWh")
+        #electricity high
         elif line[0:9] == "1-0:1.8.2":
             elec_high = str(int(line[10:15]))
             print("piekdag    ", elec_high , "kWh")
-        # Daltarief, teruggeleverd vermogen 1-0:2.8.1
-        #elif stack[stack_teller][0:9] == "1-0:2.8.1":
-         #   print "dalterug   ", stack[stack_teller][10:15]
-        # Piek tarief, teruggeleverd vermogen 1-0:2.8.2
-        #elif stack[stack_teller][0:9] == "1-0:2.8.2":
-            #print "piekterug  ", stack[stack_teller][10:15]
-        # Huidige stroomafname: 1-0:1.7.0
+        #enable these lines for logging delivered power to the network
+                # Daltarief, teruggeleverd vermogen 1-0:2.8.1
+                #elif stack[stack_teller][0:9] == "1-0:2.8.1":
+                 #   print "dalterug   ", stack[stack_teller][10:15]
+                # Piek tarief, teruggeleverd vermogen 1-0:2.8.2
+                #elif stack[stack_teller][0:9] == "1-0:2.8.2":
+                    #print "piekterug  ", stack[stack_teller][10:15]
+                # Huidige stroomafname: 1-0:1.7.0
+        #current electricity usage
         elif line[0:9] == "1-0:1.7.0":
             elec_cur = str(int(float(line[10:17])*1000))
             print("afgenomen vermogen      ", elec_cur , " W")
-        # Huidig teruggeleverd vermogen: 1-0:1.7.0
-        #elif stack[stack_teller][0:9] == "1-0:2.7.0":
-         #   print "teruggeleverd vermogen  ", int(float(stack[stack_teller][10:17])*1000), " W"
-        # Gasmeter: 0-1:24.3.0
+        #enable these lines for logging delivered current power
+            # Huidig teruggeleverd vermogen: 1-0:1.7.0
+            #elif stack[stack_teller][0:9] == "1-0:2.7.0":
+             #   print "teruggeleverd vermogen  ", int(float(stack[stack_teller][10:17])*1000), " W"
+        #Gas
         elif line[0:1] == "(":
             gas = str(int(float(line[1:10])*1000))
             print("Gas                     ", gas, " dm3")
+        #don't read other lines
         else:
             pass
 
@@ -116,13 +121,14 @@ def logSmartMeter():
         ser.close()
     except:
         GF.log("Seriële poort kon niet gesloten worden",'e')
-
+    #write the data to the log
     writeLog("log_energy", {'elec_high': elec_high, 'elec_low': elec_low, 'elec_cur': elec_cur, 'gas': gas})
     wp.digitalWrite(66,0)
 
 
-
-
+##////////////////////////////##
+##||||||MAIN||||||||||||||||||##
+##\\\\\\\\\\\\\\\\\\\\\\\\\\\\##
 
 #called by scheduler, calls logging functions
 def fillLogs():
@@ -131,25 +137,7 @@ def fillLogs():
     logSmartMeter()
     print("logging finished")
 
-	
-	
-######DB
-# def connectDB():
-# 	while True:
-# 		try:
-# 			con = MySQLdb.connect(host="localhost", # your host, usually localhost
-# 								 user="root", # your username
-# 								  passwd="RPIJvO262SADF", # your password
-# 								  db="RPi") # name of the data base
-# 			#autocommit changes and so autorefresh db
-# 			print "db connected"
-# 			con.autocommit(True)
-# 			print "autocommit enabled"
-# 			break
-# 		except:
-# 			print "Error connecting to MYSQL, retrying"
-# 			sleep(2)
-# 	return con
+#enable this code to check for double instance of program
 ######MAIN
 #check instance, quit if already running
 # """

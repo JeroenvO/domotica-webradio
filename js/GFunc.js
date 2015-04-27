@@ -1,5 +1,4 @@
 var SOCKET;
-var serverinfo = '192.168.1.104:600'
 var retries; //how often retriet to reconnect
 /*function initSliders() {
 	$('.noUiSlider').noUiSlider({
@@ -23,6 +22,25 @@ var retries; //how often retriet to reconnect
 	});
 	
 }*/
+//helper for timepicers
+(function ( $ ) {
+	$.fn.timePicker = function( options ) {
+		return this.each(function(){
+			$(this).data('tp', new timePicker(this, options));
+		});
+	};
+}( jQuery ));
+
+//helper for colorpicker
+(function ( $ ) {
+	$.fn.colorPicker = function( options ) {
+		return this.each(function(){
+			$(this).data('tp', new colorPicker(this, options));
+		});
+	};
+}( jQuery ));
+
+//initializes the timepickers. Sets the color, animation speed, and the popup where they are placed in. Bind the change event to the update websocket function
 function initTimePickers() {
 	$(".input-time").timePicker({
 		color : 'orange',
@@ -52,6 +70,8 @@ function initTimePickers() {
 		});
 	});
 }
+
+//init colorpickers, bind the change event to the update websocket function
 function initColorPickers(){
 	$(".input-color").colorPicker({
 		drawInterval: 20,
@@ -59,11 +79,13 @@ function initColorPickers(){
 			var id =$(this.canvas).attr('id');
 			var clr = this.getColorHSV();
 			//console.log('color:'+this.getColorHSL().h+id);
-			sendValue(id,[clr.h,clr.s,clr.v]);
+			sendValue(id,[parseFloat(clr.h.toFixed(5)),parseFloat(clr.s.toFixed(5)),parseFloat(clr.v.toFixed(5))]);
 		},
 		bgcolor: 'white'
 	});
 }
+
+//Init all the graphs on the logbook page. It also binds the buttons that load the datapoints of the graphs
 function initGraphs() {
 	$.plot("div.graph", [], []);
 	var start = 0;
@@ -88,6 +110,8 @@ function initGraphs() {
 		loadData($(this).attr('id').slice(0,-3), start, 0);
 	});
 }
+
+//update the graphs (plot them) with the supplied datapoints (data)
 function updateGraph(graph, data) {
 	data = eval(data);
 	var l = data.length;
@@ -100,17 +124,17 @@ function updateGraph(graph, data) {
 		t = '%H:00';
 		d = 'hour';
 	}
-	if (l > 2 * 24 * 6) {
+	if (l > 2 * 24 * 4) {
 		d = 'day';
 		t = '%a';
 	}
 	if (l > 2 * 24 * 7 ) {
-		t = '%m';
-		d = 'week';
+		t = '%e';
+		d = 'day';
 	}
 	if (l > 2 * 24 * 7 * 5) {
 		d = 'month';
-		t = '%q';
+		t = '%b';
 	}
 	console.log('Updating: ', graph, data);
 	$.plot('#' + graph, [data], {
@@ -136,6 +160,8 @@ function updateGraph(graph, data) {
 		}
 	});
 }
+
+//bind all the other buttons on any page. Make sure something happens when they change in value
 function bindActions() {
 	$(".pag-button").click(function () {
 		loadPage($(this).attr('id'));
@@ -170,16 +196,19 @@ function bindActions() {
 	});
 	$(".cs").click(function () {
 		var colorRGB = $(this).css('background-color');
-		postValue(colorRGB, 'usernm', usernm, 'users');
+		var data = 'U' + '{"c":"' + colorRGB + '"}';
+		sendSocket(data);
 		setColor(colorRGB);
 	});
 	$(".input-slider").change(function() {
 		var id = $(this).attr('id');
 		var val = $(this)[0].value;
 		$("#"+id + "-txt").html(val);
-		sendValue(id, val);
+		sendValue(id, parseInt(val));
 	});
 }
+
+//Update the value of a setting to a new value
 function updateValue(name, type, value) {
 	var find = '#' + name;//+" .input-" + type;
 	switch (type) {
@@ -222,16 +251,19 @@ function updateValue(name, type, value) {
 		break;
 	}
 }
+
+//set the color of some ui items
 function setColor(colorRGB) {
 	color = colorRGB;
-	$(".fgColor").css("color", colorRGB);
+	/*$(".fgColor").css("color", colorRGB);
 	$(".bgColor").css("background-color", colorRGB);
-	$(".noUi-connect").css("background", colorRGB);
-	$("body").append("<style>.metro .switch.input-control input[type='checkbox']:checked ~ .check{  background-color: " + colorRGB + " !important }		input[type=range]::-ms-fill-lower { background: " + colorRGB + "}</style>");
+	$(".noUi-connect").css("background", colorRGB);*/
+	$("head").append("<style>.fgColor{color:"+colorRGB+" !important}.metro .switch.input-control input[type='checkbox']:checked ~ .check, .bgColor, .noUi-connect, input[type=range]::-ms-fill-lower{  background-color: " + colorRGB + " !important }</style>");
 	
 }
-function setWidth() {
 
+//sets the width and height of the page and the category divisions
+function setWidth() {
 	var rw = window.innerWidth;
 	//var w = rw * 0.9 - 20;
 	var h = window.innerHeight;
@@ -248,17 +280,16 @@ function setWidth() {
 	$(".cat").height(h);
 	$(".cat").width(rw-30);
 	$("#cat-page").width(numCat * (rw+40));
-
 }
-function buildPage(page2load, data) {
 
+//makes a page from supplied raw page data. Also calls specific initializations per page
+function buildPage(page2load, data) {
 	$('#pagetitle-title').html('<h1>' + page2load.toLowerCase() + '</h1>');
 	$('#page-buttons').html(data.pbt);
 	$('#cat-buttons').html(data.cbt);
 	$('#cat-page').html(data.cnt);
 	numCat = data.nmct;
 	page = page2load;
-	
 	builded = true;
 	if (page2load == 'bediening') {
 		sendSocket('R{"p":"'+page2load+'"}');
@@ -269,18 +300,19 @@ function buildPage(page2load, data) {
 		initGraphs();
 	}
 	setWidth();
-	setColor(data.color);
 	bindActions();
 	console.log('page ' + page2load + ' builded');
-	
 }
 
+//send a [name, value] setting pair to the server
 function sendValue(name, value) {
 	var d={};
 	d[name] =value;
 	var data = 'S'+JSON.stringify(d);
 	sendSocket(data);
 }
+
+//send a request for graphdata to the server
 function loadData(graph, start, end) {
 	//STATE = 1;
 	var data = 'D' + '{"d":"' + graph + '","s":' + start;
@@ -291,10 +323,16 @@ function loadData(graph, start, end) {
 	sendSocket(data);
 }
 
-//request a refresh of the settings
+//send a request for raw page data to the server
 function loadPage(page) {
-	console.log('loading: '+page);
-	sendSocket('P{"p":"'+page+'"}');
+	if(false){ //use websockets
+		//console.log('loading: '+page);
+		sendSocket('P{"p":"'+page+'"}');
+	}else{ //use ajax
+		$.getJSON('loadPage.php', {page:page}).done(function (data){
+		buildPage(page,data);
+		});
+	}
 }
 
 //log in to the socketserver
@@ -319,9 +357,10 @@ function login(username, password, server, port) {
 			msg = event.data;
 			type = msg.substr(0, 1);
 			msg = msg.substr(1);
+
 			//console.log(msg);
 			switch(type){
-				case 'D': //DECODE GRAPH
+				case 'D': //Data, decode graph
 					try {
 						//log(msg);
 						//var i = msg.indexOf("P:")
@@ -356,10 +395,11 @@ function login(username, password, server, port) {
 				break;
 				case 'W':
 					console.log('received warning: '+msg);
-					alert('Dit is niet mogelijk');
+					alert('Dit is niet mogelijk (' + msg + ')');
 				break;
 				case 'A':
 					console.log('Login approved: '+msg);
+					
 					loadPage('bediening');
 				break;
 				case 'S':
@@ -370,6 +410,10 @@ function login(username, password, server, port) {
 					} catch (exception) {
 						console.log("error parsing incoming JSON setting: " + exception + " message: " + msg);
 					}
+				break;
+				case 'C': //user's color
+					console.log("Color changed to "+msg);
+					setColor(msg);
 				break;
 				default:
 					alert('invalid message received');
@@ -409,25 +453,5 @@ function updateValuesJSON(values) {
 			updateValuesJSON(values)
 		}, 200);
 	}
-
-}
-
-//post a value asynchronous via doUpdate.php to the database
-//only used for users' colors.
-function postValue(pvalue, pwhere1, pwhere2, ptable) {
-	//post changed settings to doUpdate.php that puts the new values in the database
-	$.post('doUpdate.php', {
-		value : pvalue,
-		where1 : pwhere1,
-		where2 : pwhere2,
-		table : ptable
-	}) //send post update
-	.done(function (data) { //if succesfull post
-		if (data)
-			window.alert(data); //usually not enough rights exception. If success, nothing is returned, data=NULL, then nothing is shown.
-	})
-	.fail(function (data) { //xmlhttprequest failed, server is not available
-		window.alert("De server is niet bereikbaar, probeer later opnieuw");
-	});
 
 }

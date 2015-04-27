@@ -15,7 +15,6 @@ if(substr($ip,0,9)=='192.168.1')//local
 		$usernm = 'localguest';
 		$fullname = 'lokale gast';
 	}
-	
 }
 else{ //remote ip
 	$local = false;

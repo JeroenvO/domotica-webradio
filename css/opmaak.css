@@ -1,233 +1,204 @@
-/*Custom stylesheet used with Raspberry Pi Domotica
-Jeroen van Oorschot 2013*/
+@charset "utf-8";
+/* CSS Document */
 
-html{
-	height: auto !important; /*Don't scroll page when not necesary*/
-	width: 99%; !important;
-}
-body{
-	width:99%;
-	margin: 0px;
-	top: 0px !important;/*Hide translate bar space on top of screen*/
+html {
+	height: auto!important;
+	width: 99%;
+	!important
+ }
+ 
+body {
+	width: 99%;
+	margin: 0;
+	top: 0!important;
 	font-family: 'Segoe UI', Verdana, Geneva, Arial, Helvetica, sans-serif;
-	background-color:#eee;
-	min-width:300px;
-	background-color: #fff;
-}
-div#container{ /*De pagina op het menu na*/
+	background-color: #eee;
+	min-width: 300px;
+	background-color: #fff
+ }
+div#container {
 	min-width: 200px;
 	height: auto;
 	margin: 5px;
-	padding: 10px;
-}
-.input-control.radio{/*spacing on radio buttons*/
-	margin: 2px !important;
-}
-/*settings layout specific divs*/
-div#header{
-    height: auto;/*60px;*/
-	position:fixed;
-	width:99%;
-	top:0px;
-	left:5px;
-	min-width:300px;
-}
-div#footer{
-	position:fixed;
-	bottom:5px;
-	left:0px;
-	width:100%;	
-}
-#pagetitle{
-	float:left;
-	margin-left:20px;
+	padding: 10px
+ }
+ 
+/*.input-control.radio {margin: 2px!important}*/
+.input-control.checkbox{margin-right:10px;}
+div#header {
+	height: auto;
+	position: fixed;
+	width: 99%;
+	top: 0;
+	left: 5px;
+	min-width: 300px
+ }
+ 
+div#footer {
+	position: fixed;
+	bottom: 5px;
+	left: 0;
+	width: 100%;
+	overflow: hidden
+ }
+ 
+#pagetitle {
+	float: left;
+	margin-left: 20px;
 	margin-top: 10px;
-	white-space: nowrap;
-}
-div.graph{
-	margin: 10px;
-}
-#page-buttons{ /*container around pag-button 's */
-	/*min-width:280px;
-	*/
-	z-index: 10; /*fix to set buttons on top of header*/
-	position:fixed;
-	right:5px;
-	top:5px;
-}
-#cat-buttons{
-	position:fixed;
-	right:10%;
-	top:50px;
-	/*margin-top:50px;
-	margin-left: 15px;
-	float:left;
-	overflow:visible;/**/
+	white-space: nowrap
+ }
+ 
+canvas.input-time {display: none}
+ 
+canvas {-ms-touch-action: none}
+ 
+button.input-time {width: 150px}
+ 
+div.graph {margin: 10px}
+
+a.button, button{
+	margin-top:5px!important;
 }
 
-div#contentpage{
-	margin-top:70px;
+#page-buttons {
+	z-index: 10;
+	position: fixed;
+	right: 5px;
+	top: 5px
+ }
+ 
+#cat-buttons {
+	position: fixed;
+	right: 10%;
+	top: 50px
+ }
+ 
+div#contentpage {
+	margin-top: 70px;
 	padding: 5px;
-	min-height:70px;
-	width:100%;
-	
-}
-div.cat{
-	min-width:100px;
-	min-height:50px;
-	float:left;
+	min-height: 70px;
+	width: 100%
+ }
+ 
+div.cat {
+	min-width: 100px;
+	min-height: 50px;
+	float: left;
 	padding: 10px;
-	padding-left:20px;
-	border:1px solid black;
-	overflow-y:scroll;
-	overflow-x:hidden;
-	overflow-style:auto;
-	margin:5px;
-}
-div.subcat{
-	margin: 10px;	
-}
-div.setting{
-	border: 1px black #999999;
+	padding-left: 20px;
+	border: 1px solid black;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	overflow-style: auto;
+	margin: 5px
+ }
+ 
+div.subcat {margin: 10px}
+ 
+div.setting {
+	border: 1px black #999;
 	padding: 5px 10px;
-	margin:5px 0px;
-	width:auto;
-}
-div#footer{/*footer*/
+	margin: 5px 0;
+	width: auto
+ }
+ 
+div#footer {
 	clear: both;
-	margin: 5px 5px 0px 5px;
-	padding: 5px 5px 0px 5px;
-}
-#color-swatches{
-	margin:5px;
-	float:left;
-	padding-left:20px;
-}
-.colorSwatch{
+	margin: 5px 5px 0 5px;
+	padding: 5px 5px 0 5px
+ }
+ 
+#color-swatches {
+	margin: 5px;
+	float: left;
+	padding-left: 20px
+ }
+ 
+.cs {
 	width: 10px;
 	height: 10px;
-	float:left;	
-	cursor:crosshair;
-}
-label.switch{
-	margin-left:0px;	
-	margin-top:5px;
-}
-
-/*.div-slider{ /*division containing input-slider*/
-/*	-ms-touch-action: none; /*disable scrolling*//*
-}*/
-.back-button{
-	float:left;
+	float: left;
+	cursor: crosshair
+ }
+ 
+label.switch {margin-left: 0;	margin-top: 5px}
+ 
+.back-button {
+	float: left;
 	margin-top: 9px;
-	margin-right:20px;
-}
-/* index.php layout styling*/
-.linksPanel{ /*links on homepage on left side*/
-	list-style-type:none!important;
-}
-/*radio buttons extra widht*/
-label.radio > span.helper{
-	display:inline-block;
-	min-width:600px;
-}
+	margin-right: 20px;
+	color: black!important
+ }
+ 
+.linksPanel {list-style-type: none!important}
+ 
+label.radio>span.helper {display: inline-block;	min-width: 600px}
+ 
+.small-button {width: 40px!important;	min-width: 0!important}
+ 
+@media all and (max-width:800px) {
 
-.small-button{
-	width: 40px !important;
-	min-width: 0px !important;
-}
-@media all and (max-width:800px){
-/*div#header{
-    height: auto;/*60px;*//*
-	position:fixed;
-	width:99%;
-	top:15px;
-	left:5px;
-	}*/
-.catlinktxt{
-	display:none;
-	}
-/*div#contentpage{
-	margin-top:100px;
-}*/
-/*h1{
-	font-size: 30pt!important;	
-	margin-top:20px!important;
-	line-height: 18px!important;
-	height: 50px!important;
-	
-}*/
-}
-@media all and (max-width:500px){
-.setlinktxt { /*Laat alleen icoon zien bij klein scherm*/
-		display:none;
-	}
-#footer{
-		display:none;
-	}
-.paglinktxt{
-	display:none;
-}
-#cat-buttons{
-	display:none !important;
-}
-.pag-button{
-	width: 40px !important;
-    min-width: 0px !important;
-}
-/*#page-buttons{
-	right: 5px !important;
-	width: auto !important;
-    min-width: 0px !important;
-	/*border: 1px solid;*//*
-	top:75px;
-}*/
-}
+.catlinktxt {display: none}
+ }
+@media all and (max-width:500px) {
+/*.setlinktxt*/
+ 
+.pag-button {width: 40px!important;	min-width: 0!important}
+ 
+#footer {display: none}
+ 
+.paglinktxt {display: none}
+ 
+#cat-buttons {display: none!important}
 
-
-
-/*general stuff*/
-.left{ /*too let something float left*/
-	display: block;
-	float:left;	
-}
-
-div#block3left{
-	float:left;
-	min-width:185px;
+canvas {margin-left: -30px}
+ }
+ 
+div#block3left {
+	float: left;
+	min-width: 185px;
 	width: 20%;
-	margin:5px;
-	margin-left:1%;
-}
-
-div#block3center{
-	min-width:150px;
-	float:left;
-	width:50%;
-	margin:5px;
-}
-div#block3right{
-	min-width:200px;
-	float:left;
-	width:20%;
-	margin:5px;
-}
-div.block2left{
-	float:left;
-	width: 200px;
-	margin:5px;
-	margin-left:-12px;
-}
-div.block2center{
-	float:left;
-	margin-left:8%;
-}
-h1{
-	float:left;
-}
-hr {
-    border: 0;
-    border-bottom: 1px #ddd dotted;
-    color: #ddd;
-    background-color: #ddd;
+	margin: 5px;
+	margin-left: 1%
+ }
+ 
+div#block3center {
+	min-width: 150px;
+	float: left;
+	width: 50%;
+	margin: 5px
+ }
+ 
+div#block3right {
+	min-width: 200px;
+	float: left;
+	width: 20%;
+	margin: 5px
+ }
+ /*
+.metro .input-control.checkbox input[type=checkbox]:checked~.check:after, .metro .input-control.checkbox input[type=radio]:checked~.check:after, .metro .input-control.radio input[type=checkbox]:checked~.check:after, .metro .input-control.radio input[type=radio]:checked~.check:after {
+	content: "e003";
+	margin: 5px;
+	top: 0;
+	color: #1d1d1d
+ }*/
+ 
+input[type=range]::-ms-track {
+	width: 300px;
+	height: 16px;
+	background: #ddd;
+	border: none;
+	color: transparent; /* remove default tick marks */
+ }
+ 
+input[type=range]::-ms-thumb {
+	border: none;
+	height: 16px;
+	width: 16px;
+	background: black;
+ }
+i{
+	border:none;
+	text-decoration:none!important;
 }

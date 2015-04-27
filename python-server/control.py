@@ -48,8 +48,8 @@ sleep(0.5)
 # Write init message to the connected display
 IOF.displayWrite("Raspberry PI JvODomotica initing")
 # Wait 5s so MySQL has some extra time to boot when this script runs directly after boot.
-GF.log("Starting in 5 seconds...", "N")
-sleep(5)
+GF.log("Starting in 2 seconds...", "N")
+sleep(2)
 GF.log("Starting!", "N")
 
 ##////////////////////////////////##
@@ -174,15 +174,18 @@ def command(com):
     else:
         GF.log("Command " + com + " is not allowed",'E')
 
+
 # switch amplifier audio input to the given channel
 def switchSound(channel):
     GF.log("change soundinput to " + str(channel), 'S')
     IOF.setSoundInput(int(channel))  # this function also sets amplifier off if needed
 
+
 # set radio (mpc) volume
 def setVolume(volume):
     GF.log("change volume to " + str(volume), 'S')
     subprocess.call(["mpc", "volume", str(volume)])
+
 
 # change the volume in a few steps for smooth transition
 # in the future this should become a parallel (threaded) function
@@ -208,9 +211,11 @@ def smoothVolume(reachVolume):
         except:
             GF.log("Failed to change volume", 'E')
 
+
 # stop the radio (mpc)
 def stopRadio():
     subprocess.call(["mpc", "clear"])  # clear mpc to stop radio playing, and to delete the chosen list
+
 
 # play radio from supplied stream stream
 def playRadio(stream):
@@ -222,6 +227,7 @@ def playRadio(stream):
         subprocess.call(["mpc", "add", stream])
     resumeRadio()  # play the radio
 
+
 # resume a paused radio
 def resumeRadio():
     subprocess.call(["mpc", "play"])  # this only works if there already is a stream, so not after a 'clear' command
@@ -229,10 +235,12 @@ def resumeRadio():
     radioText = getRadioText()  # directly update the radiotext, to prevent a lag of writeUpdateTime
     applySetting('radioText', radioText, 'all')  # force send radiotext update to everyone.
 
+
 # pause the radio
 def pauseRadio():
     GF.log("mpc paused", 'S')
     subprocess.call(["mpc", "stop"])  # pause radio (mpc)
+
 
 # connect the bluetooth decoder (pulseaudio) to the sound output (alsa)
 def startBluetooth():
@@ -247,6 +255,7 @@ def startBluetooth():
         GF.log("bt connect failed", "E")
         applySetting("geluidbron", "versterkerUit", 'all')
 
+
 # disconnect bluetooth decoder from speakers
 def stopBluetooth():
     GF.log("stopping bluetooth " + str(settings["bluetooth"][2]), "S")
@@ -255,6 +264,7 @@ def stopBluetooth():
                                 universal_newlines=True, stderr=subprocess.STDOUT)
     except:
         GF.log("bt disconnect failed", "E")
+
 
 # set the color of the leds, color supplied as hsl or rgb array.
 def setColor(color, tp='hsl'):
@@ -312,12 +322,14 @@ def writeUpdates():
         IOF.displayWrite(radioText)  #write radiotext to the display
 
 
-##///////////////////////////////////////////////##
-##||||functions for data request from clients||||##
-##\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\##
+# /////////////////////////////////////////////// #
+# ||||functions for data request from clients|||| #
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ #
 
-# give a user the datapoints from 'log' and 'field' (a table with measurement data) from 'start' time to 'end' time
-def getDataPoints(log, start, end, field="value"):
+# give a user the datapoints from log a table with measurement data) from 'start' time to 'end' time
+# log in t
+def getDataPoints(log, start, end):
+    table, field = log.split("-")
     qryEnd = ''  # string containing the end of the SQL query used to get the data
     if start <= 1389123003:  # start must be older than the very first logging date, January 2014
         GF.log('getDataPoints: invalid start time', 'E')
@@ -325,7 +337,7 @@ def getDataPoints(log, start, end, field="value"):
     if end is not None and end != '' and end is not False and end >= 1389123003:  # if a valid end time is supplied
         qryEnd = ' and UNIX_TIMESTAMP(timestamp)<='.str(end)  # append the end time to the query
 
-    qry = 'Select UNIX_TIMESTAMP(timestamp) as ts, ' + field + ' from log_' + log + ' where UNIX_TIMESTAMP(timestamp)>=' + str(start) + qryEnd
+    qry = 'Select UNIX_TIMESTAMP(timestamp) as ts, ' + field + ' from log_' + table + ' where UNIX_TIMESTAMP(timestamp)>=' + str(start) + qryEnd
 
     data = '['  # start building an array (as string) to store the datapoints
     db = PyDatabase.PyDatabase(host=GF.DBLogin["host"], user=GF.DBLogin["user"], passwd=GF.DBLogin["passwd"],
@@ -393,15 +405,16 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         if addr[0:9] == '192.168.1': #local user,
         # phone, laptop, or ethernet
             if addr[10:13] in allowedIPs:
-                if username == 'amblone':  # special user for amblone, the opensource ambilight client
-                    self.websocket = 'python'
-                    GF.log("local amblone connecting")
+                if username == 'adalight':  # special user for adalight, the opensource ambilight client
+                    #self.websocket = 'python'
+                    GF.log("local adalight connecting")
                 user = [username, 2, 'Lokale gebruiker', None, addr, self]
                 GF.log('server: Local user accepted', "N")
-                self.sendClient("A:local user")
-                #user's color
-                user[3] = db.Select(table='users', columns=['value'], condition_and={'usernm': user[0]})[0][0]
-                if username != 'amblone':
+
+                if username != 'adalight':
+                    self.sendClient("A:local user")
+                    # user's color
+                    user[3] = db.Select(table='users', columns=['value'], condition_and={'usernm': user[0]})[0][0]
                     self.sendClient("C" + user[3])
             # IP addres from the raspberry itself. For instance the minute-script user
             elif addr[0:13] == '192.168.1.104':
@@ -453,36 +466,50 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 data = ""
                 if self.websocket == 'web':
                     data = GF.parse_frame(self.request)
+                    self.data = str(data, "utf-8")
                 elif self.websocket == 'python':
                     data = GF.parse_frame(self.request, False)  # request from a local python script
-                self.data = str(data, "utf-8")
+                    self.data = str(data, "utf-8")
+                elif self.websocket == False:
+                    try:
+                        self.data = str(self.request.recv(256), "utf-8")
+                        if self.data is not None and self.data != '':
+                            print(self.data)
+
+                    except:
+                        print("error")
                 if self.data == "":  # skip if empty data
                     continue
                 #GF.log("server: user "+str(user[0])+" send message: "+self.data, 'N')
 
                 #decode data
-                type = self.data[0:1]
-                data = json.loads(self.data[1:])  # all data is in json format
+                try:
+                    type = self.data[0:1]
+                    print(type)
+                    data = json.loads(self.data[1:])  # all data is in json format
+                    print(data)
+                except:
+                    print("decode error")
                 if user[1] >= 0:  # if user has enough rights
                     if type == 'M':  # message
                         GF.log("server: client " + str(user[0]) + " send a message: " + str(data), 'N')
 
-                    elif type == "R":  # resend all values
+                    elif type == "R":  # Resend all values
                         GF.log("server: client " + str(user[0]) + " requested value update", 'N')
                         self.sendClient('S' + json.dumps(settings))
 
-                    elif type == "D" and user[1] >= 1:  # download graph
+                    elif type == "D" and user[1] >= 1:  # Data, download graph
                         print(data)
-                        d = data.get('d')
-                        s = data.get('s')
-                        e = data.get('e')
+                        d = data.get('d')  # data identifier, "table:field"
+                        s = data.get('s')  # start time in seconds
+                        e = data.get('e')  # end time
                         try:
                             points = getDataPoints(d, s, e)
                             GF.log("server: DataPoints for table: " + d)
                         except:
                             GF.log("server: Not possible to get dataPoints", "E")
                         if points:
-                            self.sendClient('D{"d":"' + data.get('d') + '","p":' + points + '}')
+                            self.sendClient('D{"d":"' + d + '","p":' + points + '}')
                         else:
                             self.sendClient('MGeen datapunten gevonden voor dit tijdspan')
 
@@ -516,7 +543,7 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                         else:
                             sendRound("C" + color, self, username);
                     else:
-                        GF.log('server: User ' + user[0] + ' send invalid message', 'E')
+                        GF.log('server: User ' + user[0] + ' send invalid message:' + self.data, 'E')
                         self.sendClient("W Invalid message send")
                 else:
                     GF.log('server: User ' + user[0] + ' tried to send but has not enough rights', 'E')
