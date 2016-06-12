@@ -28,7 +28,7 @@ print("Raspberry PI Domotica JvO")
 connection = []
 
 # after 192.168.1. the last numbers of the IP of users that always have full access.
-allowedIPs = ['101', '102', '103']
+allowedIPs = ['101', '102', '103', '105']
 
 # commands which are allowed in the function to send OS-commands
 allowedComs = ["poweroff", "reboot"]
@@ -132,19 +132,21 @@ def applySetting(name, value, sendTo):
     elif tp == "slider":
         if name == "volume":  # change volume
             smoothVolume(value)
-        if name == "llksunrise": # leds sunrise simulator. Color value dependent on slider
-            sunrise(value)
+        if len(name)>8:
+            if name[-7:] == "sunrise": # leds sunrise simulator. Color value dependent on slider. If name ends on "sunrise"
+                sunrise(value,name[0:-8]) #send the first part of the name with the function
         elif xt is not None and xt.isdigit(): # if the extra-field has a number, the slider is a pwm output controller
             #print('slider:'+str(xt)+'to:'+str(value))
             IOF.setPWM(int(xt), value / 100.0)
 
     # color input, colorwheel with hsl output. See jeroenvo -> html5-colorpicker
     elif tp == "color":
-        setColor(value, 'hsl')
+        setColorHSL(value, name[0:-4])
 
     # color input RGB, three sliders for r g and b
     elif tp == "colorRGB":
-        setColor(value, 'rgb')
+        if name=="kamer_rgb": #the kitchen light is set by ESP, not by rpi
+            setColorRGB(value)
 
     # Send the changed setting to connected clients, so their settings-panel is also up-to-date
     try:
@@ -267,24 +269,29 @@ def stopBluetooth():
 
 
 # set the color of the leds, color supplied as hsl or rgb array.
-def setColor(color, tp='hsl'):
-    if tp == 'hsl':
+def setColorHSL(color, src):
         r, g, b = colorsys.hsv_to_rgb(color[0], color[1], color[2])
-    else:
+        #setColorRGB([r, g, b],src) is called by applySetting
+        applySetting(src+"_rgb",[r, g, b], 'all')
+
+#Sets the color for main led strip.
+# For kitchen, the sendround setting for this colorRGB is parsed by the ESP, so this function is not called for kitchen.
+def setColorRGB(color):
         r, g, b = color
-    # use a parabolic approximation for the color to pwm conversion
-    a = 0.9
-    g = a * g * g + (1 - a) * g
-    r = a * r * r + (1 - a) * r
-    b = a * b * b + (1 - a) * b
-    # set the PWM values
-    IOF.setPWM(0, g)  #g
-    IOF.setPWM(1, r)  #r
-    IOF.setPWM(2, b)  #b
+        # use a parabolic approximation for the color to pwm conversion
+        a = 0.9
+        g = a * g * g + (1 - a) * g
+        r = a * r * r + (1 - a) * r
+        b = a * b * b + (1 - a) * b
+        # set the PWM values
+        IOF.setPWM(0, g)  #g
+        IOF.setPWM(1, r)  #r
+        IOF.setPWM(2, b)  #b
 
 # set the color of the leds using a sunrise approximation. The value (0-100) is how far the sunrise is.
 # from red via orange to full white
-def sunrise(value):
+# src is the first part of the name, currently only "keuken" or "kamer"
+def sunrise(value, src):
     if value < 20:
         h = .25 * (value / 100.0)
     else:
@@ -295,8 +302,9 @@ def sunrise(value):
         l = 1 - x * x
     else:
         l = 1
-    color = [h, s, l]
-    setColor(color)  # apply the calculated color
+    
+    #setColorHSL(color, src+"_llk")  # apply the calculated color
+    applySetting(src+"_hsl",[h, s, l],'all')
 
 
 ##//////////////////////////////////////////##
@@ -386,7 +394,12 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 return
 
         if self.websocket == 'web':
+            GF.log('now on websockets','N')
+            #data = self.request
+            #GF.log('Raw data:'+str(data),'N')
             data = GF.parse_frame(self.request)  # parse the incoming websocket packet containing the login parameters
+            GF.log('test')
+            GF.log('websocket parsed:'+str(data),'N')
         loginData = ""
         # load the logindata from the client, packet in json
         try:
@@ -410,8 +423,11 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                     GF.log("local adalight connecting")
                 user = [username, 2, 'Lokale gebruiker', None, addr, self]
                 GF.log('server: Local user accepted', "N")
-
-                if username != 'adalight':
+                if username == 'espKeuken':
+                    GF.log("local espKeuken connecting")
+                if username == 'noodstop':
+                    GF.log("local noodstop connecting")
+                else:
                     self.sendClient("A:local user")
                     # user's color
                     user[3] = db.Select(table='users', columns=['value'], condition_and={'usernm': user[0]})[0][0]
