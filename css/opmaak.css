@@ -198,6 +198,9 @@ input[type=range]::-ms-thumb {
 	width: 16px;
 	background: black;
  }
+input[type=range].colorR::-ms-fill-lower{background-color:red}
+input[type=range].colorG::-ms-fill-lower{background-color:green}
+input[type=range].colorB::-ms-fill-lower{background-color:blue}
 i{
 	border:none;
 	text-decoration:none!important;

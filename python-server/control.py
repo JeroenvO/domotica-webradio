@@ -149,6 +149,8 @@ def applySetting(name, value, sendTo):
             setColorRGB(value)
 
     # Send the changed setting to connected clients, so their settings-panel is also up-to-date
+    #round value
+    value = (json.loads(json.dumps(value), parse_float=lambda x: round(float(x), 3)))
     try:
         data = 'S' + json.dumps({name: ( tp, value)})  # { name : [ type, value] }
         if sendTo == 'all':  # send to all connected clients
@@ -418,20 +420,23 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
         if addr[0:9] == '192.168.1': #local user,
         # phone, laptop, or ethernet
             if addr[10:13] in allowedIPs:
+                user = [username, 2, 'Lokale gebruiker', None, addr, self]
+                user[3] = db.Select(table='users', columns=['value'], condition_and={'usernm': user[0]})[0][0]
+
                 if username == 'adalight':  # special user for adalight, the opensource ambilight client
                     #self.websocket = 'python'
                     GF.log("local adalight connecting")
-                user = [username, 2, 'Lokale gebruiker', None, addr, self]
-                GF.log('server: Local user accepted', "N")
-                if username == 'espKeuken':
+                elif username == 'espKeuken':
                     GF.log("local espKeuken connecting")
-                if username == 'noodstop':
+                elif username == 'noodstop':
                     GF.log("local noodstop connecting")
                 else:
                     self.sendClient("A:local user")
                     # user's color
-                    user[3] = db.Select(table='users', columns=['value'], condition_and={'usernm': user[0]})[0][0]
-                    self.sendClient("C" + user[3])
+                    self.sendClient("C" + user[3])                    
+                
+                GF.log('server: Local user accepted', "N")
+
             # IP addres from the raspberry itself. For instance the minute-script user
             elif addr[0:13] == '192.168.1.104':
                 # print('minute logging in, switching to websocket protocol')
@@ -501,9 +506,9 @@ class ThreadedServerHandler(socketserver.BaseRequestHandler):
                 #decode data
                 try:
                     type = self.data[0:1]
-                    print(type)
+                    #print(type)
                     data = json.loads(self.data[1:])  # all data is in json format
-                    print(data)
+                    #print(data)
                 except:
                     print("decode error")
                 if user[1] >= 0:  # if user has enough rights
@@ -609,7 +614,7 @@ def sendRound(data, sender=False, username=True):
         if userClass != sender and u[0] != 'minute':  # don't send back to sender
             if username == True or username == u[0]:  # to everyone logged in with same account
                 try:
-                    GF.log("sendRound: sending change: " + data + 'to ' + u[2], "N")
+                    #GF.log("sendRound: sending change: " + data + 'to ' + u[2], "N")
                     userClass.sendClient(data)
                 except:
                     GF.log("sendRound: failed to send message to user: " + u[2], "E")

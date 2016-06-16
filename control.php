@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: text/html; charset=utf-8');
+header('Content-Type: text/html; charset=utf-8',false);
+header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + 3600*24*7),false);
 if(!isset($_SESSION))
 {session_start();}?>
 <!DOCTYPE html>

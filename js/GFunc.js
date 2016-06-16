@@ -206,6 +206,25 @@ function bindActions() {
 		$("#"+id + "-txt").html(val);
 		sendValue(id, parseInt(val));
 	});
+	$(".input-colorRGB").change(function() {
+		var nameO = $(this).attr('id');
+		nameO = nameO.substring(0,nameO.length-2)
+		var name = "#"+nameO;
+		var val = [0,0,0];
+		val[0] = parseInt($(name+'-r')[0].value);
+		val[1] = parseInt($(name+'-g')[0].value);
+		val[2] = parseInt($(name+'-b')[0].value);
+		$(name+"-r-txt").html(val[0]);
+		$(name+"-g-txt").html(val[1]);
+		$(name+"-b-txt").html(val[2]);
+		for(var i=0;i<3;i++){
+			val[i]=val[i]/100.0;
+		}
+		var d={};
+		d[nameO] =val;
+		var data = 'S'+JSON.stringify(d);
+		sendSocket(data);
+	});
 }
 
 //Update the value of a setting to a new value
@@ -221,6 +240,17 @@ function updateValue(name, type, value) {
 	case 'color':
 		//console.log(value)
 		$(find).data('tp').setColorHSV(value[0],value[1],value[2]);
+		break;
+	case 'colorRGB':
+		for(var i=0;i<3;i++){
+			value[i]=parseInt(value[i]*100);
+		}
+		$(find+'-r')[0].value = value[0];
+		$(find+'-r-txt').html(value[0]);
+		$(find+'-g')[0].value = value[1];
+		$(find+'-g-txt').html(value[1]);
+		$(find+'-b')[0].value = value[2];
+		$(find+'-b-txt').html(value[2]);
 		break;
 	case 'slider':
 		$(find + "-txt").html(value);
@@ -258,7 +288,7 @@ function setColor(colorRGB) {
 	/*$(".fgColor").css("color", colorRGB);
 	$(".bgColor").css("background-color", colorRGB);
 	$(".noUi-connect").css("background", colorRGB);*/
-	$("head").append("<style>.fgColor{color:"+colorRGB+" !important}.metro .switch.input-control input[type='checkbox']:checked ~ .check, .bgColor, .noUi-connect, input[type=range]::-ms-fill-lower{  background-color: " + colorRGB + " !important }</style>");
+	$("head").append("<style>.fgColor{color:"+colorRGB+" !important}.metro .switch.input-control input[type='checkbox']:checked ~ .check, .bgColor, .noUi-connect, input[type=range].input-slider::-ms-fill-lower{  background-color: " + colorRGB + " !important }</style>");
 	
 }
 
@@ -269,9 +299,16 @@ function setWidth() {
 	var h = window.innerHeight;
 	if(rw<500){//mobile
 		h -=116;
-		if($(".input-color").length) $(".input-color").data("tp").setWidth(300,300);
+		if($(".input-color").length) 
+			$(".input-color").each(function(index, element) {
+           		$(element).data("tp").setWidth(300,300); 
+        	});
 	}else{
-		if($(".input-color").length) $(".input-color").data("tp").setWidth(500,500);
+		if($(".input-color").length) 
+			$(".input-color").each(function(index, element) {
+           		$(element).data("tp").setWidth(500,500); 
+        	});
+
 		h -=180;
 		if(rw>800){
 			rw = 800;	

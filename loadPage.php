@@ -141,9 +141,9 @@ if(isset($_GET['page'])){
 												case 'colorRGB':
 												//dit deel is niet af
 													$cnt .= '
-													<span class="input-slider-red-txt" id="'.$row_opt['name'].'-red-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'"-red" style="-ms-fill-lower{background-color:red}" min="0" max="100">
-													<span class="input-slider-green-txt" id="'.$row_opt['name'].'-green-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'-green" style="-ms-fill-lower{background-color:green}" min="0" max="100">
-													<span class="input-slider-blue-txt" id="'.$row_opt['name'].'-blue-txt"></span><br /><input class="input-slider" type="range" id="'.$row_opt['name'].'-blue" min="0" max="100">
+													<span class="input-colorRGB-txt" id="'.$row_opt['name'].'-r-txt"></span><br /><input class="input-colorRGB colorR" type="range" id="'.$row_opt['name'].'-r" min="0" max="100"><br />
+													<span class="input-colorRGB-txt" id="'.$row_opt['name'].'-g-txt"></span><br /><input class="input-colorRGB colorG" type="range" id="'.$row_opt['name'].'-g" min="0" max="100"><br />
+													<span class="input-colorRGB-txt" id="'.$row_opt['name'].'-b-txt"></span><br /><input class="input-colorRGB colorB" type="range" id="'.$row_opt['name'].'-b" min="0" max="100">
 													';
 												break;
 												case 'slider':
