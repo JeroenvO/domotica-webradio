@@ -6,7 +6,7 @@ __author__ = 'JvO'
 #Jeroen van Oorschot 2014
 #Functions that run every minute like alarms and timers
 
-#import GFunc
+import GFunc
 
 import PyDatabase
 #date and time
@@ -20,11 +20,12 @@ import socket
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-#GF = GFunc.GFunc()
+GF = GFunc.GFunc()
+
 def setSunlight(time):
     x = 0;
     while x <= 100:
-        send(json.dumps({'llksunrise' : x}))
+        send(json.dumps({'kamer_sunrise' : x, 'keuken_sunrise' : x}))
         x+=1
         sleep(time/10.0)
 
@@ -38,7 +39,7 @@ def startAlarm(alarmNum,):
     try:
         x = settings['a'+alarmNum+'_alarmLight'][1]
         if x != 0:
-            send(json.dumps({'llksunrise' : 0,'ledlampAanUit' : True}))
+            send(json.dumps({'kamer_sunrise' : 0 , 'keuken_sunrise' : 0, 'ledlampAanUit' : True}))
             setSunlight(x)
     except:
         x = 0
@@ -138,12 +139,18 @@ loginData = {
 try:
     sock.sendall(bytes(json.dumps(loginData), "utf-8"))
     sleep(1)
-    data = GF.parse_frame(sock, False)
-    answer = str(data, "utf-8")
 except:
-    print("server disconnected during login communication")
+    print("server disconnected during login communication, quiting")
     sock.close()
     exit()
+	
+#try:
+data = GF.parse_frame(sock, False)
+answer = str(data, "utf-8")
+#except:
+#    print("parsing frame failed, quiting")
+#    sock.close()
+#    exit()
 
 if answer[0:1] == 'A':
     sleep(0.1)
