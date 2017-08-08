@@ -1,8 +1,10 @@
  /*
  * WebSocketClient.ino
- *
+ * 
  *  Created on: 24.05.2015
- *
+ * Jeroen van Oorschot 2015-2017
+ * Using https://github.com/Links2004/arduinoWebSockets and https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
+ * 
  */
 
 #include <Arduino.h>
@@ -13,6 +15,9 @@
 #include <WebSocketsClient.h>
 
 #include <Hash.h>
+
+// this file contains defines for 'ssid' and 'pass' to connect to wifi.
+#include "password.h"
 
 ESP8266WiFiMulti WiFiMulti;
 WebSocketsClient webSocket;
@@ -135,7 +140,7 @@ void setup() {
     pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
 
     /*WIFI SETTINGS*/
-    WiFiMulti.addAP("011010000110111101101001", "JvOTUeInternet");
+    WiFiMulti.addAP(ssid, pass);
 
     while(WiFiMulti.run() != WL_CONNECTED) {
         delay(1000);
